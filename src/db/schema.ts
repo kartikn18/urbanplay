@@ -14,7 +14,15 @@ export type otp = {
     expires_at:Date,
     created_at:Date
 }
+export type RefreshToken = {
+    id:number,
+    user_id :number,
+    token:string,
+    expires_at:Date,
+    creates_at:Date
+}
 export interface  Database {
     users:User,
     otps:otp,
+    refreshtoken:RefreshToken
 }

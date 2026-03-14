@@ -1,7 +1,7 @@
 import {Request,Response,NextFunction} from 'express'
-import {usersignup,LoginUser,forgotpassword, generateAndSaveOTP,sendotpemail,verifyotp} from './auth.service'
-import { success } from 'zod';
+import {usersignup,LoginUser,forgotpassword, generateAndSaveOTP,sendotpemail,verifyotp,rotatetoken} from './auth.service'
 import { updatepassowrd } from './auth.models';
+import jwt from 'jsonwebtoken';
 
 export const signup = async (req:Request,res:Response,next:NextFunction)=>{
     try {
@@ -72,3 +72,25 @@ export const resetpassword = async(req:Request,res:Response,next:NextFunction)=>
         next(error);
     }
 };
+export const rotatoken = async(req:Request,res:Response,next:NextFunction)=>{
+    const incomingrefreshToken = req.cookies.refreshToken ;
+    if(!incomingrefreshToken){
+        return res.status(401).json({message:"Refresh token not found"});
+    }
+    try {
+        const decoded = jwt.verify(incomingrefreshToken,process.env.REFRESH_TOKEN_SECRET as any) as {userId:number};
+        const {accesstoken, newrefreshtoken} = await rotatetoken(decoded.userId,incomingrefreshToken);
+        res.cookie("refreshToken", newrefreshtoken, {
+            httpOnly:true,
+            secure:true,
+            sameSite:"strict",
+            maxAge:7*24*60*60*1000//1 week
+        })
+        res.status(200).json({
+            message:"Token rotated successfully",
+            data:{accesstoken,newrefreshtoken}
+        })
+    } catch (error) {
+        next(error);
+    }
+}

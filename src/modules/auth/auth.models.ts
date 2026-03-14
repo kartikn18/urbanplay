@@ -21,7 +21,7 @@ export const createUser = async (data: UserSignup)  => {
     .executeTakeFirst();
 };
 export const saveRefreshToken = async(userid:number,hasedToken:string)=>{
-    await db.updateTable("users").set({refresh_token:hasedToken}).where("id","=",userid).execute()
+    await db.insertInto("refreshtoken").values({user_id:userid,token:hasedToken}as any).execute()
 };
 export const updatepassowrd = async (data:UserSignup)=>{
     await db.updateTable('users').set({password:data.password}).where("email","=",data.email).execute()
@@ -35,3 +35,9 @@ export const findotp = async (email:string)=>{
 export const deleteotp = async (email:string)=>{
     await db.deleteFrom("otps").where("email","=",email).execute()
 };
+export const findrefreshtoken = async(userid:number)=>{
+    const refreshtoken = await 
+    db.selectFrom('refreshtoken').select('token').where('user_id','=',userid).executeTakeFirst();
+};
+export const deleteRefreshToken = async(userid:number)=>{
+await db.deleteFrom('refreshtoken').where('user_id','=',userid).execute()};

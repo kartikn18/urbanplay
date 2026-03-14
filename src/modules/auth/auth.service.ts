@@ -1,4 +1,6 @@
-import { findUserByEmail,createUser,saveRefreshToken,saveotp,deleteotp,findotp, updatepassowrd} from "./auth.models";
+import { findUserByEmail,createUser,saveRefreshToken,saveotp,deleteotp,findotp, updatepassowrd,
+    findrefreshtoken,deleteRefreshToken
+} from "./auth.models";
 import type { UserSignup ,UserLogin} from "./auth.types";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
 import bcrypt from "bcrypt";
@@ -74,4 +76,21 @@ export const resetpassword = async (email:string ,newpasswword:string)=>{
     }
     const hashedpassword = await bcrypt.hash(newpasswword,10);
     await updatepassowrd({email,password:hashedpassword});
+};
+// rotate refresh token
+export const rotatetoken = async (userid:number,incomingtoken:string)=>{
+    const storedtoken = await findrefreshtoken(userid) as any;
+    if(!storedtoken){
+        throw new Error("Refresh token not found") 
+    }
+    const isvalid = await bcrypt.compare(incomingtoken,storedtoken.token);
+    if(!isvalid){
+        throw new Error("Invalid refresh token");
+    }
+    deleteRefreshToken(userid);
+    const newrefreshtoken = await generateRefreshToken(userid);
+    const hashedtoken = await bcrypt.hash(newrefreshtoken,10);
+    await saveRefreshToken(userid,hashedtoken);
+    const accesstoken = generateAccessToken(userid);
+    return {accesstoken,newrefreshtoken};
 };
