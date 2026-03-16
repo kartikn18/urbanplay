@@ -27,6 +27,19 @@ export type TurfInfo = {
     location:string,
     description:string,
     price_per_hour:number,
+    image_url:string,
+    lat:number,
+    lng:number,
+    created_at:Date,
+    created_by:number,
+    updated_at:Date
+}
+export type Slot = {
+    id:number,
+    turf_id:number,
+    start_time:Date,
+    end_time:Date,
+    is_booked:boolean,
     created_at:Date,
     updated_at:Date
 }
@@ -34,5 +47,6 @@ export interface  Database {
     users:User,
     otps:otp,
     refreshtoken:RefreshToken
-    turfinfo:TurfInfo
+    turfinfo:TurfInfo,
+    slots:Slot
 }
