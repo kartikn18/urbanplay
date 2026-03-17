@@ -1,5 +1,7 @@
 import http from 'http';
 import authenticatroutes from "./modules/auth/auth.routes";
+import { AdminRouter } from './modules/auth/admin/admin.routes';
+import { authenticateToken } from './middlewares/authentication';
 import cors from 'cors';
 import express from 'express';
 import dotenv from 'dotenv';
@@ -15,6 +17,8 @@ app.use(cors(corsOptions));
 app.use(express.json());
 //auth routes:
 app.use('/api/auth', authenticatroutes);
+//admin routes:
+app.use('/api/admin',authenticateToken, AdminRouter);
 
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;

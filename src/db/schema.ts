@@ -19,7 +19,8 @@ export type RefreshToken = {
     user_id :number,
     token:string,
     expires_at:Date,
-    creates_at:Date
+    creates_at:Date,
+    role:string
 }
 export type TurfInfo = {
     id:number,

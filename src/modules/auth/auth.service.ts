@@ -23,10 +23,10 @@ export const LoginUser = async (data:UserLogin)=>{
     if(!isPasswordValid){
         throw new Error("Invalid password");
     }
-    const refreshtoken = generateRefreshToken(user.id);
+    const refreshtoken = generateRefreshToken(user.id,user.role);
     const hashedtoken = await bcrypt.hash(refreshtoken,10);
     await saveRefreshToken(user.id,hashedtoken);
-    const accesstoken = generateAccessToken(user.id);
+    const accesstoken = generateAccessToken(user.id,user.role);
     return {accesstoken,refreshtoken};
 };
 const createotp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -78,7 +78,7 @@ export const resetpassword = async (email:string ,newpasswword:string)=>{
     await updatepassowrd({email,password:hashedpassword});
 };
 // rotate refresh token
-export const rotatetoken = async (userid:number,incomingtoken:string)=>{
+export const rotatetoken = async (userid:number,incomingtoken:string,role:string)=>{
     const storedtoken = await findrefreshtoken(userid) as any;
     if(!storedtoken){
         throw new Error("Refresh token not found") 
@@ -88,9 +88,9 @@ export const rotatetoken = async (userid:number,incomingtoken:string)=>{
         throw new Error("Invalid refresh token");
     }
     deleteRefreshToken(userid);
-    const newrefreshtoken = await generateRefreshToken(userid);
+    const newrefreshtoken = await generateRefreshToken(userid,role);
     const hashedtoken = await bcrypt.hash(newrefreshtoken,10);
     await saveRefreshToken(userid,hashedtoken);
-    const accesstoken = generateAccessToken(userid);
+    const accesstoken = generateAccessToken(userid,role);
     return {accesstoken,newrefreshtoken};
 };

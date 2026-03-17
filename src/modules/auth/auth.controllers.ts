@@ -78,8 +78,8 @@ export const rotatoken = async(req:Request,res:Response,next:NextFunction)=>{
         return res.status(401).json({message:"Refresh token not found"});
     }
     try {
-        const decoded = jwt.verify(incomingrefreshToken,process.env.REFRESH_TOKEN_SECRET as any) as {userId:number};
-        const {accesstoken, newrefreshtoken} = await rotatetoken(decoded.userId,incomingrefreshToken);
+        const decoded = jwt.verify(incomingrefreshToken,process.env.REFRESH_TOKEN_SECRET as any) as {userId:number,role:string};
+        const {accesstoken, newrefreshtoken} = await rotatetoken(decoded.userId,incomingrefreshToken,decoded.role);
         res.cookie("refreshToken", newrefreshtoken, {
             httpOnly:true,
             secure:true,

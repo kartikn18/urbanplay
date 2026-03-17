@@ -3,7 +3,7 @@ import  {CreateTurfInput}  from "../admin/admin.types";
 import { adminModel } from "./admin.models";
 
 export async function createTurf(input:CreateTurfInput,adminId:number){
-    const {lat, lng, formattedAddress} = await getCoordinates(input.address);
+    const {lat, lng, formattedAddress} = await getCoordinates(input.address,);
 
     return await adminModel.insertTurf(input, adminId, lat, lng, formattedAddress);
 };
