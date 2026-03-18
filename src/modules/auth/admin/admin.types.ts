@@ -25,5 +25,4 @@ export interface CreateSlotInput {
   startTime: Date;
   endTime: Date;
   isBooked: boolean;
-  
 }
