@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { CreateTurfInput, CreateSlotInput } from './admin.types';
 import { createTurf, createSlot } from './admin.service';
-
+import { uploadimage } from '../../../utils/upload.service';
 export const createTurfHandler = async (req: Request, res: Response) => {
     try {
         if (!req.user || req.user.role !== 'admin') {
@@ -10,6 +10,15 @@ export const createTurfHandler = async (req: Request, res: Response) => {
 
         const adminId = req.user.id; 
         const input: CreateTurfInput = req.body;
+        const files  = req.file?.buffer;
+        if(!files){
+            return res.status(400).json({message:"No file uploaded"});
+        }
+        const result = await uploadimage(files,"turfImages");
+        if(result.resource_type != "image"){
+            return res.status(400).json({message:"Uploaded file is not an image"});
+        }
+        input.image_url = result.secure_url;
         const turf = await createTurf(input, adminId);
         res.status(201).json({
             message: "Turf created successfully",
