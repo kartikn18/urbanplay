@@ -44,10 +44,19 @@ export type Slot = {
     created_at:Date,
     updated_at:Date
 }
+export type Booking = {
+    id:number,
+    slot_id:number,
+    user_id:number,
+    created_at:Date,
+    updated_at:Date
+    status:string
+}
 export interface  Database {
     users:User,
     otps:otp,
-    refreshtoken:RefreshToken
+    refreshtoken:RefreshToken,
     turfinfo:TurfInfo,
-    slots:Slot
+    slots:Slot,
+    bookings:Booking
 }
