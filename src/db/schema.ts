@@ -51,6 +51,16 @@ export type Booking = {
     created_at:Date,
     updated_at:Date
     status:string
+    turf_id:number
+}
+export type payment = {
+    id:number,
+    booking_id:number,
+    amount:number,
+    payment_method:string,
+    payment_status:string,
+    created_at:Date,
+    updated_at:Date 
 }
 export interface  Database {
     users:User,
@@ -58,5 +68,6 @@ export interface  Database {
     refreshtoken:RefreshToken,
     turfinfo:TurfInfo,
     slots:Slot,
-    bookings:Booking
+    bookings:Booking,
+    payments:payment
 }
