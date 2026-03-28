@@ -54,13 +54,16 @@ export type Booking = {
     turf_id:number
 }
 export type payment = {
-    id:number,
-    booking_id:number,
-    amount:number,
-    payment_method:string,
-    payment_status:string,
-    created_at:Date,
-    updated_at:Date 
+   id:number,
+   booking_id:number,
+   user_id:number,
+   razorpay_payment_id:string,
+   razorpay_order_id:string,
+   payment_method:string,
+   payment_status:string,
+   amount:number,
+   created_at:Date,
+   updated_at:Date
 }
 export interface  Database {
     users:User,
