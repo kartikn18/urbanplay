@@ -14,10 +14,11 @@ export const createTurfHandler = async (req: Request, res: Response) => {
         if(!files){
             return res.status(400).json({message:"No file uploaded"});
         }
+ const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+if (!req.file || !allowedTypes.includes(req.file.mimetype)) {
+    return res.status(400).json({ message: "Only JPEG, PNG, or WEBP images are allowed" });
+}
         const result = await uploadimage(files,"turfImages");
-        if(result.resource_type != "image"){
-            return res.status(400).json({message:"Uploaded file is not an image"});
-        }
         input.image_url = result.secure_url;
         const turf = await createTurf(input, adminId);
         res.status(201).json({

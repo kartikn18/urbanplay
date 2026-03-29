@@ -28,7 +28,7 @@ async createSlot(turfId:number,startTime:Date,endTime:Date,isBooked:boolean,crea
         start_time:startTime,
         end_time:endTime,
         is_booked:isBooked,
-        created_at:createdAt
+        created_at:new Date()
     } as any).
     returningAll().
     executeTakeFirstOrThrow();

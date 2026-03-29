@@ -1,5 +1,5 @@
-import { db } from "../../config/db.js";
-import type  {UserSignup} from "./auth.types.js";
+import { db } from "../../config/db";
+import type  {UserSignup} from "../auth/auth.types";
 
 export const findUserByEmail = async (email: string) => {
   return await db

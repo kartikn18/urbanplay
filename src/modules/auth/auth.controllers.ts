@@ -1,5 +1,5 @@
 import {Request,Response,NextFunction} from 'express'
-import {usersignup,LoginUser,forgotpassword, generateAndSaveOTP,sendotpemail,verifyotp,rotatetoken} from './auth.service'
+import {usersignup,LoginUser,forgotpassword, generateAndSaveOTP,sendotpemail,verifyotp,rotatetoken,resetpassword} from './auth.service'
 import { updatepassowrd } from './auth.models';
 import jwt from 'jsonwebtoken';
 
@@ -37,7 +37,7 @@ export const login = async (req:Request,res:Response,next:NextFunction)=>{
 };
 export const forgotpasswords = async(req:Request,res:Response,next:NextFunction)=>{
     try {
-        const email = req.body;
+        const {email} = req.body;
         await forgotpassword(email);
         const otp = await generateAndSaveOTP(email);
         await sendotpemail(email,otp);
@@ -60,9 +60,10 @@ export const verifyotps = async(req:Request,res:Response,next:NextFunction)=>{
         next(error);
     }
 };
-export const resetpassword = async(req:Request,res:Response,next:NextFunction)=>{
+export const resetpasswords = async(req:Request,res:Response,next:NextFunction)=>{
     try {
         const {email,password} = req.body;
+        await resetpassword(email,password);
         await updatepassowrd({email,password});
         res.status(200).json({
             success:true,
@@ -88,7 +89,7 @@ export const rotatoken = async(req:Request,res:Response,next:NextFunction)=>{
         })
         res.status(200).json({
             message:"Token rotated successfully",
-            data:{accesstoken,newrefreshtoken}
+            data:{accesstoken}
         })
     } catch (error) {
         next(error);

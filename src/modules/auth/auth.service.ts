@@ -2,7 +2,7 @@ import { findUserByEmail,createUser,saveRefreshToken,saveotp,deleteotp,findotp, 
     findrefreshtoken,deleteRefreshToken
 } from "./auth.models";
 import type { UserSignup ,UserLogin} from "./auth.types";
-import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
+import { generateAccessToken, generateRefreshToken } from "../../utils/jwt";
 import bcrypt from "bcrypt";
 import {Resend} from 'resend';
 export const usersignup = async (data:UserSignup) =>{
@@ -29,7 +29,7 @@ export const LoginUser = async (data:UserLogin)=>{
     const accesstoken = generateAccessToken(user.id,user.role);
     return {accesstoken,refreshtoken};
 };
-const createotp = Math.floor(100000 + Math.random() * 900000).toString();
+const createotp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 export const  forgotpassword = async (email:string) =>{
     const user = await findUserByEmail(email);
@@ -38,7 +38,7 @@ export const  forgotpassword = async (email:string) =>{
     }
 };
 export const generateAndSaveOTP = async (email:string)=>{
-    const otp = createotp;
+    const otp = createotp();
     const hashedotp = await bcrypt.hash(otp,10);
     const expires_at = new Date(Date.now() + 10 * 60 * 1000);//10 minutes
     await saveotp(email,hashedotp,expires_at);
@@ -87,7 +87,7 @@ export const rotatetoken = async (userid:number,incomingtoken:string,role:string
     if(!isvalid){
         throw new Error("Invalid refresh token");
     }
-    deleteRefreshToken(userid);
+     await deleteRefreshToken(userid);
     const newrefreshtoken = await generateRefreshToken(userid,role);
     const hashedtoken = await bcrypt.hash(newrefreshtoken,10);
     await saveRefreshToken(userid,hashedtoken);
