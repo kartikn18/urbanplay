@@ -33,5 +33,14 @@ async createSlot(turfId:number,startTime:Date,endTime:Date,isBooked:boolean,crea
     returningAll().
     executeTakeFirstOrThrow();
     return slot;
-    }
+    },
+    async checkSlotOverlap(turfId: number, startTime: Date, endTime: Date) {
+    const existing = await db
+        .selectFrom("slots")
+        .where("turf_id", "=", turfId)
+        .where("start_time", "<", endTime)
+        .where("end_time", ">", startTime)
+        .executeTakeFirst();
+    return !!existing;
+}
   };

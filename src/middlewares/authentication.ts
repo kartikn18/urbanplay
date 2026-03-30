@@ -26,3 +26,11 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
         return res.status(403).json({ message: "Invalid access token" });
     }
 };
+export const checkrole = (role:string[])=>{
+    return (req: Request, res: Response, next: NextFunction) => {
+        if (!req.user || !role.includes(req.user.role)) {
+            return res.status(403).json({ message: "You are not authorized to access this resource" });
+        }
+        next();
+    };
+}

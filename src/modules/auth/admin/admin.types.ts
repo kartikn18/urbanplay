@@ -21,6 +21,8 @@ export interface CreateTurfInput {
   address: string;
   image_url: string;
   price:number;
+  lat: number;
+  lng: number;
 }
 
 export interface TurfLocation {
