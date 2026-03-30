@@ -1,12 +1,12 @@
 import axios from "axios";
 
-export async function getCoordinates(address: string) {
+export async function getCoordinates(city: string) {
   
   const response = await axios.get(
     `https://nominatim.openstreetmap.org/search`,
     {
       params: {
-        q: address,
+        q: city,
         format: "json",
         limit: 1,
       },
@@ -17,7 +17,7 @@ export async function getCoordinates(address: string) {
   );
   const data = response.data;
   if (!data || data.length === 0) {
-    throw new Error("Address not found");
+    throw new Error("City not found");
   }
   const lat = parseFloat(data[0].lat);
   const lng = parseFloat(data[0].lon);     

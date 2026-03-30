@@ -1,26 +1,90 @@
-import {db} from "../../../config/db";
+import { db } from "../../../config/db";
+import { sql } from "kysely";
+
 export const userModel = {
 
-  
-  async getAllTurfs() {
-    return await db
-      .selectFrom("turfinfo")
-      .selectAll()
-      .execute();
-  },
-    async findturfbyId(turfId:number){
-        return await db.selectFrom("turfinfo").selectAll().where("id","=",turfId).executeTakeFirst();
+    async findTurfById(turfId: number) {
+        return await db
+            .selectFrom("turfinfo")
+            .selectAll()
+            .where("id", "=", turfId)
+            .executeTakeFirst();
     },
-    async findslotsbyTurfId(turfId:number){
-        return await db.selectFrom("slots").selectAll().where("turf_id","=",turfId).execute();
+
+    async findSlotsByTurfId(turfId: number) {
+        return await db
+            .selectFrom("slots")
+            .selectAll()
+            .where("turf_id", "=", turfId)
+            .where("is_booked", "=", false) // only available slots
+            .execute();
     },
-    async findslotsbySlotId(slotId:number){
-        return await db.selectFrom("slots").selectAll().where("id","=",slotId,).where("is_booked","=",false,).executeTakeFirst();
+
+    async findSlotsBySlotId(slotId: number, turfId: number) {
+        return await db
+            .selectFrom("slots")
+            .selectAll()
+            .where("id", "=", slotId)
+            .where("turf_id", "=", turfId) // ownership check
+            .where("is_booked", "=", false)
+            .executeTakeFirst();
     },
-    async bookslot(userId:number,slotId:number){
-        return await db.insertInto("bookings").values({user_id:userId,slot_id:slotId,status:"booked"}as any).execute();
-    }   ,
-    async getbookingsbyUserId(userId:number){
-        return await db.selectFrom("bookings").selectAll().where("user_id","=",userId).execute();
-    }
-}
+
+    async bookSlot(userId: number, slotId: number, turfId: number) {
+        return await db.transaction().execute(async (trx) => {
+
+            // Re-validate inside transaction to prevent race conditions
+            const slot = await trx
+                .selectFrom("slots")
+                .selectAll()
+                .where("id", "=", slotId)
+                .where("is_booked", "=", false)
+                .executeTakeFirst();
+
+            if (!slot) throw new Error("Slot already booked or not found");
+
+            await trx
+                .updateTable("slots")
+                .set({ is_booked: true })
+                .where("id", "=", slotId)
+                .execute();
+
+            return await trx
+                .insertInto("bookings")
+                .values({
+                    user_id: userId,
+                    slot_id: slotId,
+                    turf_id: turfId,
+                    status: "confirmed",
+                } as any)
+                .returningAll()
+                .executeTakeFirstOrThrow();
+        });
+    },
+
+    async getBookingsByUserId(userId: number) {
+        return await db
+            .selectFrom("bookings")
+            .selectAll()
+            .where("user_id", "=", userId)
+            .execute();
+    },
+
+    async searchTurfs(filters: { lat: number; lng: number; name?: string; radius?: number }) {
+        let query = db.selectFrom("turfinfo").selectAll();
+
+        if (filters.name) {
+            query = query.where("name", "ilike", `%${filters.name}%`);
+        }
+
+        query = query.where(
+            sql`(6371 * acos(cos(radians(${filters.lat})) * cos(radians(lat)) *
+            cos(radians(lng) - radians(${filters.lng})) +
+            sin(radians(${filters.lat})) * sin(radians(lat))))`,
+            "<=",
+            filters.radius || 10
+        );
+
+        return await query.execute();
+    },
+};

@@ -20,7 +20,7 @@ export const adminModel = {
 
       return turf;
     },
-async createSlot(turfId:number,startTime:Date,endTime:Date,isBooked:boolean,createdAt:Date){
+async createSlot(turfId:number,startTime:Date,endTime:Date,isBooked:boolean,createdAt?:Date){
     const slot = await db.
     insertInto("slots").
     values({
@@ -28,7 +28,7 @@ async createSlot(turfId:number,startTime:Date,endTime:Date,isBooked:boolean,crea
         start_time:startTime,
         end_time:endTime,
         is_booked:isBooked,
-        created_at:new Date()
+        created_at:createdAt || new Date()
     } as any).
     returningAll().
     executeTakeFirstOrThrow();

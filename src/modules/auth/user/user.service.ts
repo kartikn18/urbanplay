@@ -1,41 +1,44 @@
 import { userModel } from "./user.models";
-import { db } from "../../../config/db";
+import { getCoordinates } from "../../../utils/geocode";
 
 export const UserService = {
 
-  async getAllTurfs() {
-    return await userModel.getAllTurfs();
-  },
+    async searchTurfs(city: string, name?: string, radius?: number) {
+        if (!city?.trim()) throw new Error("City is required");
 
-  async findSlotsByTurfId(turfId: number) {
-    const turf = await userModel.findturfbyId(turfId);
-    if (!turf) throw new Error("Turf not found");
+        let coords;
+        try {
+            coords = await getCoordinates(city);
+        } catch {
+            throw new Error("Invalid city or geocoding service unavailable");
+        }
 
-    return await userModel.findslotsbyTurfId(turfId);
-  },
-  
-  async bookSlot(userId: number, slotId: number, turfId: number) {
-    const turf = await userModel.findturfbyId(turfId);
-    if (!turf) throw new Error("Turf not found");
-    const slot = await userModel.findslotsbySlotId(slotId);
-    if (!slot) throw new Error("Slot not found");
-    if (slot.is_booked) throw new Error("Slot already booked");
-    return await db.transaction().execute(async (trx) => {
-      await trx
-        .updateTable("slots")
-        .set({ is_booked: true })
-        .where("id", "=", slotId) 
-        .execute();
-      return await trx
-        .insertInto("bookings")
-        .values({
-          user_id: userId,
-          slot_id: slotId,
-          turf_id: turfId,
-          status: "confirmed",         
-        } as any)
-        .returningAll()
-        .executeTakeFirstOrThrow();
-    });
-  },
+        const turfs = await userModel.searchTurfs({
+            lat: coords.lat,
+            lng: coords.lng,
+            name,
+            radius
+        });
+
+        if (turfs.length === 0) throw new Error("No turfs found in this area");
+        return turfs;
+    },
+
+    async findSlotsByTurfId(turfId: number) {
+        const turf = await userModel.findTurfById(turfId);
+        if (!turf) throw new Error("Turf not found");
+
+        return await userModel.findSlotsByTurfId(turfId);
+    },
+
+    async bookSlot(userId: number, slotId: number, turfId: number) {
+        const turf = await userModel.findTurfById(turfId);
+        if (!turf) throw new Error("Turf not found");
+
+        const slot = await userModel.findSlotsBySlotId(slotId, turfId);
+        if (!slot) throw new Error("Slot not found");
+
+        // Actual booking happens inside model with transaction
+        return await userModel.bookSlot(userId, slotId, turfId);
+    }
 };

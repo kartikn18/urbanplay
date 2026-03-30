@@ -38,7 +38,7 @@ export const createSlotHandler = async (req: Request, res: Response) => {
         }
 
         const input: CreateSlotInput = req.body;
-        const slot = await createSlot(input.turfId, input.startTime, input.endTime, input.isBooked, new Date());
+        const slot = await createSlot(input.turfId, input.startTime, input.endTime, input.isBooked);
         res.status(201).json({
             message: "Slot created successfully",
             data: slot,

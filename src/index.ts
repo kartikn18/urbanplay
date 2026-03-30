@@ -1,7 +1,8 @@
 import http from 'http';
 import authenticatroutes from "./modules/auth/auth.routes";
-import { AdminRouter } from './modules/auth/admin/admin.routes';
+import { AdminRoutes } from './modules/auth/admin/admin.routes';
 import { authenticateToken } from './middlewares/authentication';
+import { Userroutes} from "./modules/auth/user/user.routes"
 import cors from 'cors';
 import express from 'express';
 import dotenv from 'dotenv';
@@ -18,8 +19,9 @@ app.use(express.json());
 //auth routes:
 app.use('/api/auth', authenticatroutes);
 //admin routes:
-app.use('/api/admin',authenticateToken, AdminRouter);
-
+app.use('/api/admin',authenticateToken, AdminRoutes);
+//user routes:
+app.use('/api/user', Userroutes);
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 server.listen(PORT,()=>{
