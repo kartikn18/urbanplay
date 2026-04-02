@@ -93,6 +93,8 @@ if(!turf){
           payment_status: "success",
         }as any)
         .execute();
+        // delete the redis key after successful booking
+        await redis.del(`slot_${bookingdetails.id}`);
 
       return booking;
     });
