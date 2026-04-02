@@ -29,16 +29,5 @@ export const UserService = {
         if (!turf) throw new Error("Turf not found");
 
         return await userModel.findSlotsByTurfId(turfId);
-    },
-
-    async bookSlot(userId: number, slotId: number, turfId: number) {
-        const turf = await userModel.findTurfById(turfId);
-        if (!turf) throw new Error("Turf not found");
-
-        const slot = await userModel.findSlotsBySlotId(slotId, turfId);
-        if (!slot) throw new Error("Slot not found");
-
-        // Actual booking happens inside model with transaction
-        return await userModel.bookSlot(userId, slotId, turfId);
     }
 };

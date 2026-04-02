@@ -9,6 +9,4 @@ export const Userroutes = Router();
 Userroutes.get("/turfs/search", UserController.searchTurfs);             
 Userroutes.get("/turfs/:turfId/slots", UserController.findSlotsByTurfId); // get available slots
 
-// Protected — must be logged in
-Userroutes.post("/turfs/:turfId/slots/:slotId/book", authenticateToken, UserController.bookTurf);
 

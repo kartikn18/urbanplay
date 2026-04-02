@@ -30,37 +30,7 @@ export const userModel = {
             .executeTakeFirst();
     },
 
-    async bookSlot(userId: number, slotId: number, turfId: number) {
-        return await db.transaction().execute(async (trx) => {
 
-            // Re-validate inside transaction to prevent race conditions
-            const slot = await trx
-                .selectFrom("slots")
-                .selectAll()
-                .where("id", "=", slotId)
-                .where("is_booked", "=", false)
-                .executeTakeFirst();
-
-            if (!slot) throw new Error("Slot already booked or not found");
-
-            await trx
-                .updateTable("slots")
-                .set({ is_booked: true })
-                .where("id", "=", slotId)
-                .execute();
-
-            return await trx
-                .insertInto("bookings")
-                .values({
-                    user_id: userId,
-                    slot_id: slotId,
-                    turf_id: turfId,
-                    status: "confirmed",
-                } as any)
-                .returningAll()
-                .executeTakeFirstOrThrow();
-        });
-    },
 
     async getBookingsByUserId(userId: number) {
         return await db

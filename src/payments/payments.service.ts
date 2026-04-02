@@ -2,21 +2,29 @@ import { userModel } from "../modules/auth/user/user.models";
 import { razopayconfig } from "../config/razorpay";
 import { verifypatmentdetails, bookingdetails } from "./payments.type";
 import { db } from "../config/db";
-import crypto from "crypto";                    
+import crypto from "crypto";    
+import {redis} from "../config/redis"                
 export const paymentservices = {
 
   async createorder(turfId: number, slotId: number, userId: number) {
-
-    // Check turf exists
-    const turf = await userModel.findturfbyId(turfId);
-    if (!turf) throw new Error("Turf not found");
-
-    // Check slot exists and not already booked
-    const slot = await userModel.findslotsbySlotId(slotId);
-    if (!slot) throw new Error("Slot not found");
-    if (slot.is_booked) throw new Error("Slot already booked");
-
-    // Create Razorpay order
+const turf = await userModel.findTurfById(turfId);
+if(!turf){
+    throw new Error("turf not found");
+}
+    // Check slots exists
+   const existingslot = await redis.get(`slot_${slotId}`);
+   if(existingslot){
+    throw new Error("slot already reserved, try another one");
+   }
+   const slot = await userModel.findSlotsBySlotId(slotId,turfId);
+   if(!slot){
+    throw new Error("slot not available");
+   }
+  await redis.setex(
+    `slot_${slotId}`,
+    300,
+    userId.toString()
+  )
     const createorder = await razopayconfig.orders.create({
       amount: turf.price_per_hour * 100,        // paise
       currency: "INR",
@@ -35,7 +43,10 @@ export const paymentservices = {
     paymentdetails: verifypatmentdetails,
     bookingdetails: bookingdetails
   ) {
-
+    const verify = await redis.get(`slot_${bookingdetails.id}`);
+    if(!verify || verify !== bookingdetails.userId.toString()){
+        throw new Error("slot reservation expired, try booking again");
+    }
     // Step 1 — Verify signature
     const body =
       paymentdetails.razorpay_order_id + "|" + paymentdetails.razorpay_payment_id;
