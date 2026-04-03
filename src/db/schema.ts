@@ -43,8 +43,6 @@ export type Slot = {
     is_booked:boolean,
     created_at:Date,
     updated_at:Date
-    reserved_until:Date,
-    reversed_by:number | null
 }
 export type Booking = {
     id:number,

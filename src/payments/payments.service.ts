@@ -22,7 +22,7 @@ if(!turf){
    }
   await redis.setex(
     `slot_${slotId}`,
-    300,
+    600,// 10 min expiration
     userId.toString()
   )
     const createorder = await razopayconfig.orders.create({

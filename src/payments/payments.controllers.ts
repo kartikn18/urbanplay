@@ -2,8 +2,9 @@ import {Request, Response,NextFunction} from "express";
 import { paymentservices } from "./payments.service";
 
 export const createorder = async(req:Request,res:Response,next:NextFunction)=>{
-    const id = req.user?.id;
-    const {turfid,slotId} = req.body;
+    const id = req.user?.id;// from JWT middleware
+    const turfid = req.params.turfId as unknown as number;
+    const slotId = req.params.slotId as unknown as number;
     try {
         const order = await paymentservices.createorder(turfid,slotId,id!);
         res.status(200).json({
@@ -13,32 +14,14 @@ export const createorder = async(req:Request,res:Response,next:NextFunction)=>{
     } catch (error) {
         next(error);
     };
-const verifypayments = async (req: Request, res: Response) => {
+
+}
+
+export const verifypayments = async(req:Request,res:Response)=>{
+    const {razorpay_order_id,razorpay_payment_id,razorpay_signature,amount,turfId,slotId} = req.body;
+    const userId = req.user?.id;
+    if(!userId) return res.status(401).json({error:"Unauthorized"});
     try {
-      const userId = req.user?.id as number;                    // from JWT middleware
-
-      const { 
-        razorpay_order_id, 
-        razorpay_payment_id, 
-        razorpay_signature,
-        amount,
-        slotId,
-        turfId,
-      } = req.body;
-
-      // Validate input
-      if (
-        !razorpay_order_id ||
-        !razorpay_payment_id ||
-        !razorpay_signature ||
-        !slotId ||
-        !turfId ||
-        !amount
-      ) {
-        return res.status(400).json({ 
-          error: "All payment details are required" 
-        });
-      }
 
       const booking = await paymentservices.verifypayment(
         // payment details
@@ -68,4 +51,4 @@ const verifypayments = async (req: Request, res: Response) => {
     }
   };
 
-}
+
