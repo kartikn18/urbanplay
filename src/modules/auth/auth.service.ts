@@ -5,6 +5,8 @@ import type { UserSignup ,UserLogin} from "./auth.types";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt";
 import bcrypt from "bcrypt";
 import {Resend} from 'resend';
+import { otpqueue } from "../../queues";
+import { otpWorker } from "../../workers/worker.otps";
 export const usersignup = async (data:UserSignup) =>{
     const existngUser = await findUserByEmail(data.email);
     if(existngUser){
@@ -61,13 +63,8 @@ export const verifyotp = async(email:string,otp:string)=>{
 }
 const resend = new Resend(process.env.RESEND_API_KEY || '');
 export const sendotpemail = async (email:string,otp:string)=>{
-    await resend.emails.send({
-        from:'turf <turf@example.com>',// sender address
-        to:`${email},`, // list of receivers
-        subject:"OTP for turf", // Subject line
-        text:"This is a test email from turf.", // plain text body
-        html:`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/></head> <body style="font-family:sans-serif;background:#eee;padding:15px;"> <div style="border:1px solid #ccc;background:#fff;padding:15px;"> <h3 style="margin-top:0;color:#666;">OTP for turf</h3> <p><strong>This is a test email from turf.</strong></p> </div> </body> </html>` // html body
-    });
+    await otpqueue.add("sendOTP",{email,otp});
+    return otp;
 };
 export const resetpassword = async (email:string ,newpasswword:string)=>{
     const user = await findUserByEmail(email);
