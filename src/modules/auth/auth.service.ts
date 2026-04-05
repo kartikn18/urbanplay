@@ -6,7 +6,6 @@ import { generateAccessToken, generateRefreshToken } from "../../utils/jwt";
 import bcrypt from "bcrypt";
 import {Resend} from 'resend';
 import { otpqueue } from "../../queues";
-import { otpWorker } from "../../workers/worker.otps";
 export const usersignup = async (data:UserSignup) =>{
     const existngUser = await findUserByEmail(data.email);
     if(existngUser){
