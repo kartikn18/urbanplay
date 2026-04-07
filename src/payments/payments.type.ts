@@ -9,4 +9,7 @@ export interface bookingdetails {
   id: number;      // slot id
   turfId: number;
   userId: number;
+  email: string;
+  slotTime: Date;
+  turfName: string;
 }
