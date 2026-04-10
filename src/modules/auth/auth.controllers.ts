@@ -1,6 +1,5 @@
 import {Request,Response,NextFunction} from 'express'
 import {usersignup,LoginUser,forgotpassword, generateAndSaveOTP,sendotpemail,verifyotp,rotatetoken,resetpassword} from './auth.service'
-import { updatepassowrd } from './auth.models';
 import jwt from 'jsonwebtoken';
 
 export const signup = async (req:Request,res:Response,next:NextFunction)=>{
@@ -64,7 +63,6 @@ export const resetpasswords = async(req:Request,res:Response,next:NextFunction)=
     try {
         const {email,password} = req.body;
         await resetpassword(email,password);
-        await updatepassowrd({email,password});
         res.status(200).json({
             success:true,
             message:"Password reset successfully"
@@ -79,8 +77,8 @@ export const rotatoken = async(req:Request,res:Response,next:NextFunction)=>{
         return res.status(401).json({message:"Refresh token not found"});
     }
     try {
-        const decoded = jwt.verify(incomingrefreshToken,process.env.REFRESH_TOKEN_SECRET as any) as {userId:number,role:string};
-        const {accesstoken, newrefreshtoken} = await rotatetoken(decoded.userId,incomingrefreshToken,decoded.role);
+        const decoded = jwt.verify(incomingrefreshToken,process.env.REFRESH_TOKEN_SECRET as string) as {userid:number,role:string};
+        const {accesstoken, newrefreshtoken} = await rotatetoken(decoded.userid,incomingrefreshToken,decoded.role);
         res.cookie("refreshToken", newrefreshtoken, {
             httpOnly:true,
             secure:true,

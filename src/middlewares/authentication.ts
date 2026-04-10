@@ -19,8 +19,8 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
         return res.status(401).json({ message: "Access token missing" });
     }
     try {
-        const decode = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || '') as { userId: number, role: string };
-        req.user = { id: decode.userId, role: decode.role }; 
+        const decode = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET as string) as { userid: number, role: string };
+        req.user = { id: decode.userid, role: decode.role }; 
         next();
     } catch (error) {
         return res.status(403).json({ message: "Invalid access token" });

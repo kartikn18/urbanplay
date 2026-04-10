@@ -36,8 +36,8 @@ export const deleteotp = async (email:string)=>{
     await db.deleteFrom("otps").where("email","=",email).execute()
 };
 export const findrefreshtoken = async(userid:number)=>{
-    const refreshtoken = await 
-    db.selectFrom('refreshtoken').select('token').where('user_id','=',userid).executeTakeFirst();
+    return await db
+    .selectFrom('refreshtoken').select('token').where('user_id','=',userid).executeTakeFirst();
 };
 export const deleteRefreshToken = async(userid:number)=>{
 await db.deleteFrom('refreshtoken').where('user_id','=',userid).execute()};

@@ -60,7 +60,7 @@ export const verifyotp = async(email:string,otp:string)=>{
     }
     await deleteotp(email);
 }
-const resend = new Resend(process.env.RESEND_API_KEY || '');
+const resend = new Resend(process.env.RESEND_API_KEY);
 export const sendotpemail = async (email:string,otp:string)=>{
     await otpqueue.add("sendOTP",{email,otp});
     return otp;
@@ -73,7 +73,7 @@ export const resetpassword = async (email:string ,newpasswword:string)=>{
     const hashedpassword = await bcrypt.hash(newpasswword,10);
     await updatepassowrd({email,password:hashedpassword});
 };
-// rotate refresh token
+// rotate token function to issue new access and refresh tokens
 export const rotatetoken = async (userid:number,incomingtoken:string,role:string)=>{
     const storedtoken = await findrefreshtoken(userid) as any;
     if(!storedtoken){
