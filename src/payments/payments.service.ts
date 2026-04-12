@@ -1,10 +1,10 @@
 import { userModel } from "../modules/auth/user/user.models";
 import { razopayconfig } from "../config/razorpay";
-import { verifypatmentdetails, bookingdetails } from "./payments.type";
+import { VerifyPaymentDetails, BookingDetails } from "./payments.type";
 import { db } from "../config/db";
 import crypto from "crypto";
 import { redis } from "../config/redis";
-import {bookingemailqueue,failedpaymetqueue}  from "../queues/index";
+import { bookingemailqueue, failedPaymentQueue } from "../queues/index";
 
 export const paymentservices = {
 
@@ -43,19 +43,19 @@ export const paymentservices = {
     },
 
     async verifypayment(
-        paymentdetails: verifypatmentdetails,
-        bookingdetails: bookingdetails
+        paymentdetails: VerifyPaymentDetails,
+        bookingCtx: BookingDetails
     ) {
         // Step 1 — Check Redis reservation
-        const verify = await redis.get(`slot_${bookingdetails.id}`);
-        if (!verify || verify !== bookingdetails.userId.toString()) {
-            await failedpaymetqueue.add("failedPayment", {
-                email: bookingdetails.email,
-                turfName: bookingdetails.turfName,
+        const verify = await redis.get(`slot_${bookingCtx.id}`);
+        if (!verify || verify !== bookingCtx.userId.toString()) {
+            await failedPaymentQueue.add("failedPayment", {
+                email: bookingCtx.email,
+                turfName: bookingCtx.turfName,
                 amount: paymentdetails.amount,
                 reason: "Slot reservation expired",
                 razorpay_order_id: paymentdetails.razorpay_order_id,
-                userId: bookingdetails.userId
+                userId: bookingCtx.userId
             });
             throw new Error("Slot reservation expired, try booking again");
         }
@@ -68,54 +68,125 @@ export const paymentservices = {
             .digest("hex");
 
         if (expectedsignature !== paymentdetails.razorpay_signature) {
-            await failedpaymetqueue.add("failedPayment", {
-                email: bookingdetails.email,
-                turfName: bookingdetails.turfName,
+            await failedPaymentQueue.add("failedPayment", {
+                email: bookingCtx.email,
+                turfName: bookingCtx.turfName,
                 amount: paymentdetails.amount,
                 reason: "Payment signature verification failed",
                 razorpay_order_id: paymentdetails.razorpay_order_id,
-                userId: bookingdetails.userId
+                userId: bookingCtx.userId
             });
             throw new Error("Payment verification failed");
+        }
+
+        // Step 2b — Confirm payment with Razorpay (amount + order binding)
+        let amountPaise: number;
+        try {
+            const rpPayment = await razopayconfig.payments.fetch(
+                paymentdetails.razorpay_payment_id
+            );
+            if (rpPayment.order_id !== paymentdetails.razorpay_order_id) {
+                await failedPaymentQueue.add("failedPayment", {
+                    email: bookingCtx.email,
+                    turfName: bookingCtx.turfName,
+                    amount: paymentdetails.amount,
+                    reason: "Payment does not match order",
+                    razorpay_order_id: paymentdetails.razorpay_order_id,
+                    userId: bookingCtx.userId,
+                });
+                throw new Error("Payment does not match order");
+            }
+            const st = rpPayment.status;
+            if (st !== "captured" && st !== "authorized") {
+                await failedPaymentQueue.add("failedPayment", {
+                    email: bookingCtx.email,
+                    turfName: bookingCtx.turfName,
+                    amount: paymentdetails.amount,
+                    reason: `Payment status: ${st}`,
+                    razorpay_order_id: paymentdetails.razorpay_order_id,
+                    userId: bookingCtx.userId,
+                });
+                throw new Error("Payment not completed");
+            }
+            amountPaise = Number(rpPayment.amount);
+            if (Number(paymentdetails.amount) !== amountPaise) {
+                await failedPaymentQueue.add("failedPayment", {
+                    email: bookingCtx.email,
+                    turfName: bookingCtx.turfName,
+                    amount: paymentdetails.amount,
+                    reason: "Amount mismatch with Razorpay",
+                    razorpay_order_id: paymentdetails.razorpay_order_id,
+                    userId: bookingCtx.userId,
+                });
+                throw new Error("Amount mismatch");
+            }
+        } catch (err) {
+            const rethrow =
+                err instanceof Error &&
+                (err.message === "Payment does not match order" ||
+                    err.message === "Payment not completed" ||
+                    err.message === "Amount mismatch");
+            if (rethrow) throw err;
+            await failedPaymentQueue.add("failedPayment", {
+                email: bookingCtx.email,
+                turfName: bookingCtx.turfName,
+                amount: paymentdetails.amount,
+                reason: "Razorpay payment lookup failed",
+                razorpay_order_id: paymentdetails.razorpay_order_id,
+                userId: bookingCtx.userId,
+            });
+            throw new Error("Could not verify payment with Razorpay");
         }
 
         // Step 3 — Single atomic transaction
         const booking = await db.transaction().execute(async (trx) => {
 
-            // Re-validate slot inside transaction
+            
             const slot = await trx
                 .selectFrom("slots")
                 .selectAll()
-                .where("id", "=", bookingdetails.id)
+                .where("id", "=", bookingCtx.id)
                 .where("is_booked", "=", false)
                 .executeTakeFirst();
 
             if (!slot) {
-                await failedpaymetqueue.add("failedPayment", {
-                    email: bookingdetails.email,
-                    turfName: bookingdetails.turfName,
+                await failedPaymentQueue.add("failedPayment", {
+                    email: bookingCtx.email,
+                    turfName: bookingCtx.turfName,
                     amount: paymentdetails.amount,
                     reason: "Slot no longer available",
                     razorpay_order_id: paymentdetails.razorpay_order_id,
-                    userId: bookingdetails.userId
+                    userId: bookingCtx.userId
                 });
                 throw new Error("Slot no longer available");
+            }
+
+            if (slot.turf_id !== bookingCtx.turfId) {
+                await failedPaymentQueue.add("failedPayment", {
+                    email: bookingCtx.email,
+                    turfName: bookingCtx.turfName,
+                    amount: paymentdetails.amount,
+                    reason: "Turf does not match slot",
+                    razorpay_order_id: paymentdetails.razorpay_order_id,
+                    userId: bookingCtx.userId,
+                });
+                throw new Error("Turf does not match slot");
             }
 
             // Mark slot as booked
             await trx
                 .updateTable("slots")
                 .set({ is_booked: true })
-                .where("id", "=", bookingdetails.id)
+                .where("id", "=", bookingCtx.id)
                 .execute();
 
             // Create booking
             const booking = await trx
                 .insertInto("bookings")
                 .values({
-                    slot_id: bookingdetails.id,
-                    turf_id: bookingdetails.turfId,
-                    user_id: bookingdetails.userId,
+                    slot_id: bookingCtx.id,
+                    turf_id: slot.turf_id,
+                    user_id: bookingCtx.userId,
                     status: "confirmed",
                 } as any)
                 .returningAll()
@@ -126,10 +197,10 @@ export const paymentservices = {
                 .insertInto("payments")
                 .values({
                     booking_id: booking.id,
-                    user_id: bookingdetails.userId,
+                    user_id: bookingCtx.userId,
                     razorpay_order_id: paymentdetails.razorpay_order_id,
                     razorpay_payment_id: paymentdetails.razorpay_payment_id,
-                    amount: paymentdetails.amount,
+                    amount: amountPaise,
                     payment_status: "success",
                 } as any)
                 .execute();
@@ -138,14 +209,14 @@ export const paymentservices = {
         });
 
         // Step 4 — Clear Redis AFTER transaction succeeds
-        await redis.del(`slot_${bookingdetails.id}`);
+        await redis.del(`slot_${bookingCtx.id}`);
 
         // Step 5 — Queue confirmation email
         await bookingemailqueue.add('bookingConfirmation', {
-            email: bookingdetails.email,
-            turfName: bookingdetails.turfName,
-            slotTime: bookingdetails.slotTime,
-            amount: paymentdetails.amount,
+            email: bookingCtx.email,
+            turfName: bookingCtx.turfName,
+            slotTime: bookingCtx.slotTime,
+            amount: amountPaise,
             bookingId: booking.id
         });
 

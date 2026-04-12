@@ -25,7 +25,7 @@ export const bookingemailqueue = new Queue("bookingEmailQueue",{
         removeOnFail:false
     }
 });
-export const failedpaymetqueue = new Queue("failedPaymentQueue",{
+export const failedPaymentQueue = new Queue("failedPaymentQueue",{
     connection:redis,
     defaultJobOptions:{
         attempts:3,
