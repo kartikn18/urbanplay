@@ -5,7 +5,6 @@ export interface VerifyPaymentDetails {
   amount: number;
 }
 
-/** Context for completing a booking after payment; turfId must match the slot’s turf in DB. */
 export interface BookingDetails {
   id: number; // slot id
   turfId: number;
