@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { CreateTurfInput, CreateSlotInput } from './admin.types';
 import { createTurf, createSlot } from './admin.service';
 import { uploadimage } from '../../../utils/upload.service';
-import { adminModel } from './admin.models';
 export const createTurfHandler = async (req: Request, res: Response) => {
     try {
         if (!req.user || req.user.role !== 'admin') {
@@ -10,7 +9,6 @@ export const createTurfHandler = async (req: Request, res: Response) => {
         }
 
         const adminId = req.user.id;
-        const input: CreateTurfInput = req.body;
         const files = req.file?.buffer;
         if (!files) {
             return res.status(400).json({ message: "No file uploaded" });
@@ -20,7 +18,12 @@ export const createTurfHandler = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Only JPEG, PNG, or WEBP images are allowed" });
         }
         const result = await uploadimage(files, "turfImages");
-       const turf =  await adminModel.insertTurf({ ...input, image_url: result.secure_url }, adminId, input.lat, input.lng, input.address);
+        const turfimages = result.secure_url;
+        const input:CreateTurfInput={
+            ...req.body,
+            image_url:turfimages
+        }
+        const turf = await createTurf(input, adminId);
         res.status(201).json({
             message: "Turf created successfully",
             data: turf,
@@ -36,9 +39,9 @@ export const createSlotHandler = async (req: Request, res: Response) => {
         if (!req.user || req.user.role !== 'admin') {
             return res.status(403).json({ message: "You are not authorized to create slots" });
         }
-
-        const input: CreateSlotInput = req.body;
-        const slot = await createSlot(input.turfId, input.startTime, input.endTime, input.isBooked);
+        const adminid = req.user.id;
+        const {name,startTime,endTime} = req.body;
+        const slot = await createSlot(new Date(startTime), new Date(endTime), false, name, adminid);
         res.status(201).json({
             message: "Slot created successfully",
             data: slot,

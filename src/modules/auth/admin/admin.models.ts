@@ -42,5 +42,13 @@ async createSlot(turfId:number,startTime:Date,endTime:Date,isBooked:boolean,crea
         .where("end_time", ">", startTime)
         .executeTakeFirst();
     return !!existing;
+},
+async getturfname(name:string,id:number){
+  const turf = await db.selectFrom("turfinfo").
+  where("name","=",name).
+  where("created_by","=",id).
+  selectAll()
+  .executeTakeFirst();
+  return turf;
 }
   };

@@ -16,6 +16,7 @@ export const createSlotSchema = z.object({
   message: "endTime must be after startTime"
 });
 export interface CreateTurfInput {
+  city:string,
   name: string;
   description: string;
   address: string;
@@ -40,6 +41,8 @@ export interface CreateTurfResponse {
   created_at: string;
 }
 export interface CreateSlotInput {
+  adminid:number,
+  name:string,
   turfId: number;
   startTime: Date;
   endTime: Date;

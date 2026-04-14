@@ -6,7 +6,7 @@ export async function getCoordinates(city: string) {
     `https://nominatim.openstreetmap.org/search`,
     {
       params: {
-        q: city,
+        q: city ,
         format: "json",
         limit: 1,
       },
