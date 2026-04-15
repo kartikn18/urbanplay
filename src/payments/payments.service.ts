@@ -4,7 +4,7 @@ import { VerifyPaymentDetails, BookingDetails } from "./payments.type";
 import { db } from "../config/db";
 import crypto from "crypto";
 import { redis } from "../config/redis";
-import { bookingemailqueue, failedPaymentQueue } from "../queues/index";
+import { bookingemailqueue, failedPaymentQueue ,adminNotificationQueue} from "../queues/index";
 
 export const paymentservices = {
 
@@ -219,7 +219,18 @@ export const paymentservices = {
             amount: amountPaise,
             bookingId: booking.id
         });
-
+        const admins = await db
+    .selectFrom("users")
+    .select(["email"])
+    .where("role", "=", "admin")
+    .execute();
+        await adminNotificationQueue.add("newBooking",{
+            turfname:bookingCtx.turfName,
+            slotTime: bookingCtx.slotTime,
+            amount: amountPaise,
+            bookingId: booking.id,
+            email: admins[0].email,
+        })
         return booking;
     },
 };

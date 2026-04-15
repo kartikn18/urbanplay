@@ -37,3 +37,15 @@ export const failedPaymentQueue = new Queue("failedPaymentQueue",{
         removeOnFail:false
     }
 });
+export const adminNotificationQueue = new Queue("adminNotificationQueue",{
+    connection:redis,
+    defaultJobOptions:{
+        attempts:3,
+        backoff:{
+            type:"exponential",
+            delay:1000
+        },
+        removeOnComplete:true,
+        removeOnFail:false      
+    }
+});

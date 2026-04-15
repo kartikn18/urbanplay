@@ -1,6 +1,7 @@
 import {Request, Response,NextFunction} from "express";
 import { paymentservices } from "./payments.service";
 import{db} from "../config/db";
+
 export const createorder = async(req:Request,res:Response,next:NextFunction)=>{
     const id = req.user?.id;// from JWT middleware
     if(!id) return res.status(401).json({error:"Unauthorized"});
@@ -73,7 +74,7 @@ export const verifypayments = async(req:Request,res:Response)=>{
                 email: userdetails.email,
                 slotTime: slot.start_time,
                 turfName: turf.name,
-            }
+            },
         );
 
       return res.status(201).json({
