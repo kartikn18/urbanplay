@@ -4,7 +4,7 @@ import { VerifyPaymentDetails, BookingDetails } from "./payments.type";
 import { db } from "../config/db";
 import crypto from "crypto";
 import { redis } from "../config/redis";
-import { bookingemailqueue, failedPaymentQueue ,adminNotificationQueue} from "../queues/index";
+import { bookingemailqueue, failedPaymentQueue, adminNotificationQueue } from "../queues/index";
 
 export const paymentservices = {
 
@@ -47,7 +47,7 @@ export const paymentservices = {
         bookingCtx: BookingDetails
     ) {
         // Step 1 — Check Redis reservation
-        const verify = await redis.get(`slot_${bookingCtx.id}`);
+        const verify = await redis.get(`slot_${bookingCtx.slotId}`);
         if (!verify || verify !== bookingCtx.userId.toString()) {
             await failedPaymentQueue.add("failedPayment", {
                 email: bookingCtx.email,
@@ -141,11 +141,11 @@ export const paymentservices = {
         // Step 3 — Single atomic transaction
         const booking = await db.transaction().execute(async (trx) => {
 
-            
+
             const slot = await trx
                 .selectFrom("slots")
                 .selectAll()
-                .where("id", "=", bookingCtx.id)
+                .where("id", "=", bookingCtx.slotId)
                 .where("is_booked", "=", false)
                 .executeTakeFirst();
 
@@ -177,14 +177,14 @@ export const paymentservices = {
             await trx
                 .updateTable("slots")
                 .set({ is_booked: true })
-                .where("id", "=", bookingCtx.id)
+                .where("id", "=", bookingCtx.slotId)
                 .execute();
 
             // Create booking
             const booking = await trx
                 .insertInto("bookings")
                 .values({
-                    slot_id: bookingCtx.id,
+                    slot_id: bookingCtx.slotId,
                     turf_id: slot.turf_id,
                     user_id: bookingCtx.userId,
                     status: "confirmed",
@@ -209,7 +209,7 @@ export const paymentservices = {
         });
 
         // Step 4 — Clear Redis AFTER transaction succeeds
-        await redis.del(`slot_${bookingCtx.id}`);
+        await redis.del(`slot_${bookingCtx.slotId}`);
 
         // Step 5 — Queue confirmation email
         await bookingemailqueue.add('bookingConfirmation', {
@@ -219,17 +219,18 @@ export const paymentservices = {
             amount: amountPaise,
             bookingId: booking.id
         });
-        const admins = await db
-    .selectFrom("users")
-    .select(["email"])
-    .where("role", "=", "admin")
-    .execute();
-        await adminNotificationQueue.add("newBooking",{
-            turfname:bookingCtx.turfName,
+        const admin = await db
+            .selectFrom("users")
+            .innerJoin("turfinfo", "turfinfo.created_by", "users.id")
+            .select(["users.email"])
+            .where("turfinfo.id", "=", bookingCtx.turfId)
+            .executeTakeFirst();
+        await adminNotificationQueue.add("newBooking", {
+            turfname: bookingCtx.turfName,
             slotTime: bookingCtx.slotTime,
             amount: amountPaise,
             bookingId: booking.id,
-            email: admins[0].email,
+            email: admin?.email
         })
         return booking;
     },

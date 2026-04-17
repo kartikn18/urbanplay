@@ -6,7 +6,7 @@ export interface VerifyPaymentDetails {
 }
 
 export interface BookingDetails {
-  id: number; // slot id
+  slotId: number; // slot id
   turfId: number;
   userId: number;
   email: string;

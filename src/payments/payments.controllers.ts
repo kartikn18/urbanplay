@@ -67,8 +67,9 @@ export const verifypayments = async(req:Request,res:Response)=>{
                 razorpay_signature,
                 amount: Number(amount),
             },
+            //booking context
             {
-                id: slotIdNum,
+                slotId: slotIdNum,
                 turfId: slot.turf_id,
                 userId,
                 email: userdetails.email,
