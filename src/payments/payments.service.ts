@@ -196,7 +196,7 @@ export const paymentservices = {
             await trx
                 .insertInto("payments")
                 .values({
-                    booking_id: booking.id,
+                    booking_id: booking.booking_id,
                     user_id: bookingCtx.userId,
                     razorpay_order_id: paymentdetails.razorpay_order_id,
                     razorpay_payment_id: paymentdetails.razorpay_payment_id,
@@ -217,7 +217,7 @@ export const paymentservices = {
             turfName: bookingCtx.turfName,
             slotTime: bookingCtx.slotTime,
             amount: amountPaise,
-            bookingId: booking.id
+            bookingId: booking.booking_id
         });
         const admin = await db
             .selectFrom("users")
@@ -229,7 +229,7 @@ export const paymentservices = {
             turfname: bookingCtx.turfName,
             slotTime: bookingCtx.slotTime,
             amount: amountPaise,
-            bookingId: booking.id,
+            bookingId: booking.booking_id,
             email: admin?.email
         })
         return booking;

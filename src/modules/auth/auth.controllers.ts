@@ -10,7 +10,7 @@ export const signup = async (req:Request,res:Response,next:NextFunction)=>{
         }
         res.status(201).json({
             message:"User created successfully",
-            data:{id:newuser.id,email:newuser.email}
+            data:{id:newuser.id,email:newuser.email,role:newuser.role}
         })
     } catch (error) {
         next(error);
@@ -19,7 +19,7 @@ export const signup = async (req:Request,res:Response,next:NextFunction)=>{
 
 export const login = async (req:Request,res:Response,next:NextFunction)=>{
     try {
-        const {accesstoken,refreshtoken} = await LoginUser(req.body);
+        const {accesstoken,refreshtoken,role} = await LoginUser(req.body);
         res.cookie("refreshToken",refreshtoken,{
             httpOnly:true,
             secure:true,
@@ -28,7 +28,7 @@ export const login = async (req:Request,res:Response,next:NextFunction)=>{
         })
         res.status(200).json({
             message:"Login successful",
-            data:{accesstoken}
+            data:{accesstoken,role}
         })
     } catch (error) {
         next(error);
@@ -87,7 +87,7 @@ export const rotatoken = async(req:Request,res:Response,next:NextFunction)=>{
         })
         res.status(200).json({
             message:"Token rotated successfully",
-            data:{accesstoken}
+            data:{accesstoken,role:decoded.role}
         })
     } catch (error) {
         next(error);

@@ -7,7 +7,8 @@ const password = z.string().regex(
 
 export const userSignupSchema = z.object({
   email: z.string().email(),
-  password: password
+  password: password,
+  role:z.enum(["user","admin"]).default('user')
 });
 export const userLoginSchema = z.object({
   email: z.string().email(),

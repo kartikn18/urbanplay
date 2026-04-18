@@ -15,13 +15,13 @@ export const createUser = async (data: UserSignup)  => {
     .values({
       email: data.email,
       password: data.password,
-      role: "user" 
+      role: data.role
     }as any)
     .returningAll()
     .executeTakeFirst();
 };
-export const saveRefreshToken = async(userid:number,hasedToken:string)=>{
-    await db.insertInto("refreshtoken").values({user_id:userid,token:hasedToken}as any).execute()
+export const saveRefreshToken = async(userid:number,hasedToken:string,role:string)=>{
+    await db.insertInto('refresh_tokens').values({user_id:userid,token:hasedToken,role:role}as any).execute()
 };
 export const updatepassowrd = async (data:UserSignup)=>{
     await db.updateTable('users').set({password:data.password}).where("email","=",data.email).execute()
@@ -37,7 +37,7 @@ export const deleteotp = async (email:string)=>{
 };
 export const findrefreshtoken = async(userid:number)=>{
     return await db
-    .selectFrom('refreshtoken').select('token').where('user_id','=',userid).executeTakeFirst();
+    .selectFrom('refresh_tokens').select('token').where('user_id','=',userid).executeTakeFirst();
 };
 export const deleteRefreshToken = async(userid:number)=>{
-await db.deleteFrom('refreshtoken').where('user_id','=',userid).execute()};
+await db.deleteFrom('refresh_tokens').where('user_id','=',userid).execute()};

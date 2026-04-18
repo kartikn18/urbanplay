@@ -26,9 +26,9 @@ export const LoginUser = async (data:UserLogin)=>{
     }
     const refreshtoken = generateRefreshToken(user.id,user.role);
     const hashedtoken = await bcrypt.hash(refreshtoken,10);
-    await saveRefreshToken(user.id,hashedtoken);
+    await saveRefreshToken(user.id,hashedtoken,user.role);
     const accesstoken = generateAccessToken(user.id,user.role);
-    return {accesstoken,refreshtoken};
+    return {accesstoken,refreshtoken,role:user.role};
 };
 const createotp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -71,7 +71,7 @@ export const resetpassword = async (email:string ,newpasswword:string)=>{
         throw new Error("User not found");
     }
     const hashedpassword = await bcrypt.hash(newpasswword,10);
-    await updatepassowrd({email,password:hashedpassword});
+    await updatepassowrd({email,password:hashedpassword,role:user.role} as UserSignup);
 };
 // rotate token function to issue new access and refresh tokens
 export const rotatetoken = async (userid:number,incomingtoken:string,role:string)=>{
@@ -86,7 +86,7 @@ export const rotatetoken = async (userid:number,incomingtoken:string,role:string
      await deleteRefreshToken(userid);
     const newrefreshtoken = await generateRefreshToken(userid,role);
     const hashedtoken = await bcrypt.hash(newrefreshtoken,10);
-    await saveRefreshToken(userid,hashedtoken);
+    await saveRefreshToken(userid,hashedtoken,role);
     const accesstoken = generateAccessToken(userid,role);
     return {accesstoken,newrefreshtoken};
 };
