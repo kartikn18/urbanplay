@@ -9,7 +9,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 dotenv.config();
 const app = express();
-
+//workers
 const corsOptions = {
     origin: 'http://localhost:5173',
     credentials:true,
@@ -19,6 +19,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 //auth routes:
+import "./workers";
 app.use('/api/auth', authenticatroutes);
 //admin routes:
 app.use('/api/admin',authenticateToken, AdminRoutes);

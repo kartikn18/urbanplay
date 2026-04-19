@@ -86,9 +86,23 @@ api.interceptors.response.use(
   },
 );
 
+export type ApiErrorBody = {
+  message?: string;
+  error?: string;
+  retry_after?: number;
+};
+
+/** Absolute time (ms) when the client may retry, from a 429 body `retry_after` (seconds). */
+export function extractRateLimitUntilMs(err: unknown): number | null {
+  if (!axios.isAxiosError(err) || err.response?.status !== 429) return null;
+  const d = err.response.data as ApiErrorBody | undefined;
+  if (typeof d?.retry_after !== "number" || d.retry_after <= 0) return null;
+  return Date.now() + d.retry_after * 1000;
+}
+
 export function getApiErrorMessage(err: unknown, fallback = "Something went wrong") {
   if (axios.isAxiosError(err)) {
-    const d = err.response?.data as { message?: string; error?: string } | undefined;
+    const d = err.response?.data as ApiErrorBody | undefined;
     return d?.message || d?.error || err.message || fallback;
   }
   if (err instanceof Error) return err.message;

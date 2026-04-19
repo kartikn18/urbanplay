@@ -1,14 +1,14 @@
 import { Worker } from "bullmq";
-import { redis } from "../config/redis";
+import { workerRedis } from "../config/redis";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY) || "";
+const resend = new Resend(process.env.RESEND_API_KEY);
 
  export const paymentworker = new Worker(
     "bookingEmailQueue",
     async(job)=>{
         await resend.emails.send({
-            from:"turf@onboarding.com",
+            from:"turf <onboarding@resend.dev>",
             to:job.data.email,
             subject:"Booking Confirmation",
             html:`
@@ -21,7 +21,7 @@ const resend = new Resend(process.env.RESEND_API_KEY) || "";
         })
         
     },
-    {connection:redis}
+    {connection:workerRedis}
 );
 paymentworker.on("completed",(job)=>{
     console.log(`Email sent for booking ${job.data.bookingId}`);
@@ -34,7 +34,7 @@ export const failedpaymentworker = new Worker(
     "failedPaymentQueue",
     async(job)=>{
         await resend.emails.send({
-            from:"turf@onboarding.com",
+            from:"turf <onboarding@resend.dev>",
             to:job.data.email,
             subject:"Payment Failed",
             html: ` <h2>Payment Failed</h2>
@@ -45,7 +45,7 @@ export const failedpaymentworker = new Worker(
                     `
         })
     },
-    {connection:redis}
+    {connection:workerRedis}
 );
 failedpaymentworker.on("completed",(job)=>{
     console.log(`Failed payment email sent for booking ${job.data.bookingId}`);

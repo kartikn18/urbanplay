@@ -18,7 +18,7 @@ export const passwordAttemptLimit = async (
     const maxAttempts = 3;
 
     try {
-        const count = await redis.incr(key);
+        const count = await redis.incr(key);//value of the key is incremented by 1 and returned
 
         if (count === 1) {
             await redis.expire(key, windowSeconds);

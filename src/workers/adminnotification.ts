@@ -1,5 +1,5 @@
 import { Worker } from "bullmq";
-import { redis } from "../config/redis";
+import { workerRedis } from "../config/redis";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY) ;
@@ -8,7 +8,7 @@ export const adminnotificationworker = new Worker(
     "adminNotificationQueue",
     async(job)=>{
         await resend.emails.send({
-            from:"turf@booking.com",
+            from:"turf <onboarding@resend.dev>",
             to:job.data.email,
             subject:"New Booking Alert",
             html:`
@@ -20,7 +20,7 @@ export const adminnotificationworker = new Worker(
             `,
         })
     },
-    {connection:redis}
+    {connection:workerRedis}
 );
 adminnotificationworker.on("completed",(job)=>{
     console.log(`Admin notification sent for booking ${job.data.bookingId}`);

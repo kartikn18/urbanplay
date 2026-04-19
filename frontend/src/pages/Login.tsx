@@ -4,8 +4,9 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { api, getApiErrorMessage } from "../api/axios";
+import { api, extractRateLimitUntilMs, getApiErrorMessage } from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+import { RateLimitNotice, useRateLimitUntil } from "../components/RateLimitNotice";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -19,6 +20,8 @@ export function Login() {
   const location = useLocation();
   const { login } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
+  const rateLimitBlocked = useRateLimitUntil(rateLimitUntil);
 
   const from =
     (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || "/";
@@ -39,9 +42,12 @@ export function Login() {
       const token = data.data?.accesstoken;
       if (!token) throw new Error("Missing access token");
       login(token);
+      setRateLimitUntil(null);
       toast.success(data.message || "Logged in");
       navigate(from, { replace: true });
     } catch (e) {
+      const until = extractRateLimitUntilMs(e);
+      if (until) setRateLimitUntil(until);
       toast.error(getApiErrorMessage(e));
     } finally {
       setSubmitting(false);
@@ -60,6 +66,7 @@ export function Login() {
         </p>
       </div>
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
+        <RateLimitNotice untilMs={rateLimitUntil} />
         <div>
           <label className="text-sm font-medium text-slate-700" htmlFor="email">
             Email
@@ -97,10 +104,10 @@ export function Login() {
         </div>
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || rateLimitBlocked}
           className="flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow hover:bg-emerald-700 disabled:opacity-60"
         >
-          {submitting ? "Signing in…" : "Log in"}
+          {submitting ? "Signing in…" : rateLimitBlocked ? "Try again shortly" : "Log in"}
         </button>
       </form>
     </div>

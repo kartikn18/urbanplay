@@ -4,7 +4,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { api, getApiErrorMessage } from "../api/axios";
+import { api, extractRateLimitUntilMs, getApiErrorMessage } from "../api/axios";
+import { RateLimitNotice, useRateLimitUntil } from "../components/RateLimitNotice";
 import { PWD_EMAIL_KEY } from "./ForgotPassword";
 
 const schema = z.object({
@@ -17,6 +18,8 @@ type FormValues = z.infer<typeof schema>;
 export function VerifyOtp() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [rateLimitUntil, setRateLimitUntil] = useState<number | null>(null);
+  const rateLimitBlocked = useRateLimitUntil(rateLimitUntil);
   const storedEmail = useMemo(() => sessionStorage.getItem(PWD_EMAIL_KEY) || "", []);
 
   const {
@@ -35,10 +38,13 @@ export function VerifyOtp() {
         email: values.email,
         otp: values.otp,
       });
+      setRateLimitUntil(null);
       sessionStorage.setItem(PWD_EMAIL_KEY, values.email);
       toast.success("OTP verified");
       navigate("/reset-password");
     } catch (e) {
+      const until = extractRateLimitUntilMs(e);
+      if (until) setRateLimitUntil(until);
       toast.error(getApiErrorMessage(e));
     } finally {
       setSubmitting(false);
@@ -64,6 +70,7 @@ export function VerifyOtp() {
         <p className="mt-2 text-sm text-slate-600">Enter the code we emailed to {storedEmail}.</p>
       </div>
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
+        <RateLimitNotice untilMs={rateLimitUntil} />
         <input type="hidden" {...register("email")} />
         <div>
           <label className="text-sm font-medium text-slate-700" htmlFor="otp">
@@ -81,10 +88,10 @@ export function VerifyOtp() {
         </div>
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || rateLimitBlocked}
           className="flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow hover:bg-emerald-700 disabled:opacity-60"
         >
-          {submitting ? "Verifying…" : "Verify"}
+          {submitting ? "Verifying…" : rateLimitBlocked ? "Try again shortly" : "Verify"}
         </button>
       </form>
       <p className="text-center text-sm text-slate-600">
