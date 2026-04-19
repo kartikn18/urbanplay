@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +23,10 @@ const slotSchema = z.object({
 
 type SlotForm = z.infer<typeof slotSchema>;
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
 export function Dashboard() {
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<File | null>(null);
   const [turfSubmitting, setTurfSubmitting] = useState(false);
   const [slotSubmitting, setSlotSubmitting] = useState(false);
@@ -34,6 +37,10 @@ export function Dashboard() {
   const onCreateTurf = turfForm.handleSubmit(async (values) => {
     if (!image) {
       toast.error("Please choose an image (JPEG, PNG, or WEBP).");
+      return;
+    }
+    if (image.size > MAX_IMAGE_BYTES) {
+      toast.error("Image must be 5 MB or smaller.");
       return;
     }
     setTurfSubmitting(true);
@@ -49,6 +56,7 @@ export function Dashboard() {
       toast.success("Turf created");
       turfForm.reset();
       setImage(null);
+      if (imageInputRef.current) imageInputRef.current.value = "";
     } catch (e) {
       toast.error(getApiErrorMessage(e));
     } finally {
@@ -148,11 +156,13 @@ export function Dashboard() {
           <div>
             <label className="text-sm font-medium text-slate-700">Image</label>
             <input
+              ref={imageInputRef}
               type="file"
               accept="image/jpeg,image/png,image/webp"
               className="mt-1 w-full text-sm"
               onChange={(e) => setImage(e.target.files?.[0] ?? null)}
             />
+            <p className="mt-1 text-xs text-slate-500">JPEG, PNG, or WebP, max 5 MB.</p>
           </div>
           <div className="md:col-span-2 flex justify-end">
             <button

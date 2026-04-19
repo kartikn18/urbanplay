@@ -17,7 +17,7 @@ export const createTurfHandler = async (req: Request, res: Response) => {
         if (!req.file || !allowedTypes.includes(req.file.mimetype)) {
             return res.status(400).json({ message: "Only JPEG, PNG, or WEBP images are allowed" });
         }
-        const result = await uploadimage(files, "turfImages");
+        const result = await uploadimage(files, "turfimages");
         const turfimages = result.secure_url;
         const input:CreateTurfInput={
             ...req.body,
