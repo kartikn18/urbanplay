@@ -5,5 +5,5 @@ import upload  from '../../../config/multer';
 
 export const AdminRoutes = Router();
 
-AdminRoutes.post('/turf',authenticateToken,checkrole(["admin"]), upload.single('image'), createTurfHandler);
+AdminRoutes.post('/turf',authenticateToken,checkrole(["admin"]), upload.array('image',5), createTurfHandler);
 AdminRoutes.post('/slot', authenticateToken, checkrole(["admin"]), createSlotHandler);

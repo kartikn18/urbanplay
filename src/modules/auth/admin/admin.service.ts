@@ -18,3 +18,9 @@ export async function createSlot(startTime: Date, endTime: Date, isBooked: boole
     if (overlap) throw new Error("Slot overlaps with an existing slot");
     return await adminModel.createSlot(turfId, startTime, endTime, isBooked);
 }
+export async function deleteturf(id:number){
+    return await adminModel.deleteturf(id);
+}
+export async function deleteslot(turfid:number,slotid :number){
+    return await adminModel.deleteslot(turfid,slotid);
+};

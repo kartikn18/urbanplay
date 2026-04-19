@@ -50,5 +50,17 @@ async getturfname(name:string,id:number){
   selectAll()
   .executeTakeFirst();
   return turf;
+},
+async deleteturf(id:number){
+  const turf = await db.selectFrom('turfinfo').selectAll().where("id","=",id).executeTakeFirst();
+  if(!turf) throw new Error("Turf not found");
+  await db.deleteFrom("turfinfo").where("id","=",id).execute();
+  return turf;
+},
+async deleteslot(turfid:number,slotid :number){
+  const turf = await db.selectFrom('slots').selectAll().where("id","=",slotid).where("turf_id","=",turfid).executeTakeFirst();
+  if(!turf) throw new Error("Slot not found");
+  await db.deleteFrom("slots").where("id","=",slotid).execute();
+  return turf;
 }
-  };
+};

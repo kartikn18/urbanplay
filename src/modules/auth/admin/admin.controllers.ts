@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { CreateTurfInput, CreateSlotInput } from './admin.types';
-import { createTurf, createSlot } from './admin.service';
+import { createTurf, createSlot,deleteturf, deleteslot } from './admin.service';
 import { uploadimage } from '../../../utils/upload.service';
 export const createTurfHandler = async (req: Request, res: Response) => {
     try {
@@ -51,3 +51,35 @@ export const createSlotHandler = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+export const deleteturfHandler = async(req:Request,res:Response)=>{
+    try {
+        if (!req.user || req.user.role !== 'admin') {
+            return res.status(403).json({ message: "You are not authorized to delete turf" });
+        }
+        const {id} = req.params;
+        const turf = await deleteturf(Number(id));
+        res.status(200).json({
+            message:"Turf deleted successfully",
+            data:turf
+        })
+    } catch (error) {
+        console.error("Error deleting turf:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+export const deleteslotHandler = async(req:Request,res:Response)=>{
+    try {
+        if (!req.user || req.user.role !== 'admin') {
+            return res.status(403).json({ message: "You are not authorized to delete slot" });
+        }
+        const {turfid,slotid} = req.params;
+        const slot = await deleteslot(Number(turfid),Number(slotid));
+        res.status(200).json({
+            message:"Slot deleted successfully",
+            data:slot
+        })
+    } catch (error) {
+        console.error("Error deleting slot:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
