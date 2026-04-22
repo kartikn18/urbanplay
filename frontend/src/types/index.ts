@@ -5,6 +5,7 @@ export type Turf = {
   description: string;
   price_per_hour: number;
   image_url: string;
+  image_urls?: string[];
   lat: number;
   lng: number;
   created_at?: string;
@@ -30,6 +31,20 @@ export type Booking = {
   status: string;
   created_at?: string;
   updated_at?: string;
+};
+
+export type BookingHistoryItem = {
+  booking_id: number;
+  status: string;
+  created_at: string;
+  turf_name: string;
+  location: string;
+  start_time: string;
+  end_time: string;
+  amount: number;
+  payment_status: string;
+  razorpay_payment_id: string;
+  recipts_url?: string | null;
 };
 
 export type RazorpayOrderPayload = {

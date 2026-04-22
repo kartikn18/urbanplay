@@ -3,8 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { api, getApiErrorMessage } from "../api/axios";
 import { CountdownTimer } from "../components/CountdownTimer";
-import type { RazorpayOrderPayload } from "../types";
-import type { Slot, Turf } from "../types";
+import type { Booking, RazorpayOrderPayload, Slot, Turf } from "../types";
 
 function loadRazorpayScript(): Promise<boolean> {
   if (window.Razorpay) return Promise.resolve(true);
@@ -63,7 +62,10 @@ export function Payment() {
         handler: async (response) => {
           setBusy(true);
           try {
-            const verifyRes = await api.post<{ booking: unknown; message?: string }>(
+            const verifyRes = await api.post<{
+              booking: Booking & { recipts_url?: string | null };
+              message?: string;
+            }>(
               "/payments/verify",
               {
                 razorpay_order_id: response.razorpay_order_id,
@@ -82,6 +84,7 @@ export function Payment() {
                 turf: turf ?? { id: tid, name: "Your turf" },
                 slot,
                 amountPaise: payload.amount,
+                receiptUrl: verifyRes.data.booking?.recipts_url ?? null,
               },
             });
           } catch (e) {

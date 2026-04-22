@@ -103,7 +103,16 @@ export function extractRateLimitUntilMs(err: unknown): number | null {
 export function getApiErrorMessage(err: unknown, fallback = "Something went wrong") {
   if (axios.isAxiosError(err)) {
     const d = err.response?.data as ApiErrorBody | undefined;
-    return d?.message || d?.error || err.message || fallback;
+    const serverMsg = d?.message || d?.error;
+    if (serverMsg && serverMsg.trim()) return serverMsg;
+    if (!err.response) return "Network error. Please check your internet connection.";
+    const status = err.response.status;
+    if (status >= 500) return "Server error. Please try again in a moment.";
+    if (status === 404) return "Requested endpoint was not found.";
+    if (status === 401) return "Your session has expired. Please log in again.";
+    if (status === 403) return "You do not have permission to perform this action.";
+    if (status === 422 || status === 400) return "Invalid request. Please check your input.";
+    return err.message || fallback;
   }
   if (err instanceof Error) return err.message;
   return fallback;

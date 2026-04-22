@@ -62,5 +62,6 @@ CREATE TABLE IF NOT EXISTS payments (
     razorpay_payment_id VARCHAR(256),
     amount DECIMAL(10, 2) NOT NULL,
     payment_status VARCHAR(20) NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    recipts_url Text
 );

@@ -55,12 +55,12 @@ export function Login() {
   });
 
   return (
-    <div className="mx-auto max-w-md space-y-8 rounded-3xl border border-emerald-100 bg-white p-8 shadow-sm">
+    <div className="mx-auto max-w-md space-y-8 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-xl shadow-black/20 backdrop-blur">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Welcome back</h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <h1 className="text-2xl font-bold text-white">Welcome back</h1>
+        <p className="mt-2 text-sm text-slate-300">
           New here?{" "}
-          <Link to="/signup" className="font-semibold text-emerald-700 hover:underline">
+          <Link to="/signup" className="font-semibold text-rose-300 hover:underline">
             Create an account
           </Link>
         </p>
@@ -68,14 +68,14 @@ export function Login() {
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <RateLimitNotice untilMs={rateLimitUntil} />
         <div>
-          <label className="text-sm font-medium text-slate-700" htmlFor="email">
+          <label className="text-sm font-medium text-slate-200" htmlFor="email">
             Email
           </label>
           <input
             id="email"
             type="email"
             autoComplete="email"
-            className="mt-1 w-full rounded-xl border border-emerald-100 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
+            className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/70 px-3 py-2 text-white placeholder:text-slate-400 outline-none ring-rose-400 focus:ring-2"
             {...register("email")}
           />
           {errors.email && (
@@ -83,14 +83,14 @@ export function Login() {
           )}
         </div>
         <div>
-          <label className="text-sm font-medium text-slate-700" htmlFor="password">
+          <label className="text-sm font-medium text-slate-200" htmlFor="password">
             Password
           </label>
           <input
             id="password"
             type="password"
             autoComplete="current-password"
-            className="mt-1 w-full rounded-xl border border-emerald-100 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
+            className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/70 px-3 py-2 text-white placeholder:text-slate-400 outline-none ring-rose-400 focus:ring-2"
             {...register("password")}
           />
           {errors.password && (
@@ -98,14 +98,14 @@ export function Login() {
           )}
         </div>
         <div className="text-right text-sm">
-          <Link to="/forgot-password" className="font-semibold text-emerald-700 hover:underline">
+          <Link to="/forgot-password" className="font-semibold text-rose-300 hover:underline">
             Forgot password?
           </Link>
         </div>
         <button
           type="submit"
           disabled={submitting || rateLimitBlocked}
-          className="flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow hover:bg-emerald-700 disabled:opacity-60"
+          className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-rose-500 to-fuchsia-500 py-3 font-semibold text-white shadow-lg shadow-rose-900/30 hover:brightness-110 disabled:opacity-60"
         >
           {submitting ? "Signing in…" : rateLimitBlocked ? "Try again shortly" : "Log in"}
         </button>

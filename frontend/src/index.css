@@ -5,5 +5,14 @@ html {
 }
 
 body {
-  @apply bg-white text-slate-900 antialiased;
+  @apply antialiased text-slate-100;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(244, 63, 94, 0.2), transparent 60%),
+    radial-gradient(1000px 450px at 100% 0%, rgba(59, 130, 246, 0.22), transparent 60%),
+    linear-gradient(180deg, #080b15 0%, #090f1f 48%, #0b1224 100%);
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
 }

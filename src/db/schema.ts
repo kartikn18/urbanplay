@@ -63,6 +63,7 @@ export type Payment = {
     amount: number;
     payment_status: string;
     created_at: Date;
+    recipts_url: string;
 }
 
 export interface Database {

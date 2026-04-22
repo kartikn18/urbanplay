@@ -54,7 +54,7 @@ export function ResetPassword() {
 
   if (!storedEmail) {
     return (
-      <div className="mx-auto max-w-md rounded-3xl border border-amber-200 bg-amber-50 p-8 text-center text-sm text-amber-900">
+      <div className="mx-auto max-w-md rounded-3xl border border-amber-300/30 bg-amber-500/10 p-8 text-center text-sm text-amber-100">
         Verify your OTP first, then return here.{" "}
         <Link className="font-semibold underline" to="/verify-otp">
           Go to verify OTP
@@ -64,22 +64,22 @@ export function ResetPassword() {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-8 rounded-3xl border border-emerald-100 bg-white p-8 shadow-sm">
+    <div className="mx-auto max-w-md space-y-8 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-xl shadow-black/20 backdrop-blur">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Set a new password</h1>
-        <p className="mt-2 text-sm text-slate-600">For {storedEmail}</p>
+        <h1 className="text-2xl font-bold text-white">Set a new password</h1>
+        <p className="mt-2 text-sm text-slate-300">For {storedEmail}</p>
       </div>
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <input type="hidden" {...register("email")} />
         <div>
-          <label className="text-sm font-medium text-slate-700" htmlFor="np">
+          <label className="text-sm font-medium text-slate-200" htmlFor="np">
             New password
           </label>
           <input
             id="np"
             type="password"
             autoComplete="new-password"
-            className="mt-1 w-full rounded-xl border border-emerald-100 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
+            className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/70 px-3 py-2 text-white placeholder:text-slate-400 outline-none ring-rose-400 focus:ring-2"
             {...register("password")}
           />
           {errors.password && (
@@ -89,7 +89,7 @@ export function ResetPassword() {
         <button
           type="submit"
           disabled={submitting}
-          className="flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow hover:bg-emerald-700 disabled:opacity-60"
+          className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-rose-500 to-fuchsia-500 py-3 font-semibold text-white shadow-lg shadow-rose-900/30 hover:brightness-110 disabled:opacity-60"
         >
           {submitting ? "Saving…" : "Update password"}
         </button>

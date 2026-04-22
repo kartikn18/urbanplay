@@ -13,12 +13,13 @@ import { TurfDetail } from "./pages/TurfDetail";
 import { Payment } from "./pages/Payment";
 import { BookingConfirmation } from "./pages/BookingConfirmation";
 import { Dashboard } from "./pages/admin/Dashboard";
+import { UserDashboard } from "./pages/UserDashboard";
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50/40 to-white">
+    <div className="min-h-screen">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-8 md:py-10">
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -37,6 +38,14 @@ export default function App() {
             }
           />
           <Route path="/booking-confirmation" element={<BookingConfirmation />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <UserDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/admin"
             element={

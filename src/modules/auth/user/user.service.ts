@@ -29,5 +29,9 @@ export const UserService = {
         if (!turf) throw new Error("Turf not found");
 
         return await userModel.findSlotsByTurfId(turfId);
-    }
+    },
+    async paymenthistory(userId: number) {
+        return await userModel.getBookingHistory(userId);
+    },
+
 };

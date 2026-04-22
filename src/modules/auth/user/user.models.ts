@@ -57,4 +57,28 @@ export const userModel = {
 
         return await query.execute();
     },
+async getBookingHistory(userId: number) {
+    return await db
+        .selectFrom("bookings")
+        .innerJoin("slots", "slots.id", "bookings.slot_id")
+        .innerJoin("turfinfo", "turfinfo.id", "bookings.turf_id")
+        .innerJoin("payments", "payments.booking_id", "bookings.booking_id")
+        .select([
+            "bookings.booking_id",
+            "bookings.status",
+            "bookings.created_at",
+            "turfinfo.name as turf_name",
+            "turfinfo.location",
+            "slots.start_time",
+            "slots.end_time",
+            "payments.amount",
+            "payments.payment_status",
+            "payments.razorpay_payment_id",
+            "payments.recipts_url"  
+        ])
+        .where("bookings.user_id", "=", userId)
+        .orderBy("bookings.created_at", "desc")
+        .execute();
+}
+    
 };

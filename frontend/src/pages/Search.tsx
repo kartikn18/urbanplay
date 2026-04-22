@@ -67,40 +67,40 @@ export function Search() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Find a turf</h1>
-        <p className="mt-2 text-slate-600">Filter by city, optional name, and search radius.</p>
+        <h1 className="text-3xl font-bold text-white">Find a turf</h1>
+        <p className="mt-2 text-slate-300">Filter by city, optional name, and search radius.</p>
       </div>
 
       <form
         onSubmit={applyFilters}
-        className="grid gap-4 rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm md:grid-cols-4"
+        className="grid gap-4 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-lg shadow-black/20 md:grid-cols-4"
       >
         <div className="md:col-span-2">
-          <label className="text-xs font-semibold uppercase text-slate-500">City</label>
+          <label className="text-xs font-semibold uppercase text-slate-300">City</label>
           <input
             required
-            className="mt-1 w-full rounded-xl border border-emerald-100 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
+            className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-white outline-none ring-rose-400 focus:ring-2"
             value={city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="Required"
           />
         </div>
         <div>
-          <label className="text-xs font-semibold uppercase text-slate-500">Name contains</label>
+          <label className="text-xs font-semibold uppercase text-slate-300">Name contains</label>
           <input
-            className="mt-1 w-full rounded-xl border border-emerald-100 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
+            className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-white outline-none ring-rose-400 focus:ring-2"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Optional"
           />
         </div>
         <div>
-          <label className="text-xs font-semibold uppercase text-slate-500">Radius (km)</label>
+          <label className="text-xs font-semibold uppercase text-slate-300">Radius (km)</label>
           <input
             type="number"
             min={1}
             max={200}
-            className="mt-1 w-full rounded-xl border border-emerald-100 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
+            className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/60 px-3 py-2 text-white outline-none ring-rose-400 focus:ring-2"
             value={radius}
             onChange={(e) => setRadius(e.target.value)}
           />
@@ -108,7 +108,7 @@ export function Search() {
         <div className="md:col-span-4 flex justify-end">
           <button
             type="submit"
-            className="rounded-xl bg-emerald-600 px-6 py-2 font-semibold text-white hover:bg-emerald-700"
+            className="rounded-xl bg-gradient-to-r from-rose-500 to-fuchsia-500 px-6 py-2 font-semibold text-white shadow-lg shadow-rose-900/25 hover:brightness-110"
           >
             Search
           </button>
@@ -116,17 +116,17 @@ export function Search() {
       </form>
 
       {!cityParam ? (
-        <p className="rounded-xl border border-dashed border-emerald-200 bg-emerald-50/50 p-6 text-sm text-slate-600">
+        <p className="rounded-xl border border-dashed border-white/20 bg-white/5 p-6 text-sm text-slate-300">
           Enter a city to search. You can also jump from the{" "}
-          <Link to="/" className="font-semibold text-emerald-700 underline">
+          <Link to="/" className="font-semibold text-rose-300 underline">
             home page
           </Link>
           .
         </p>
       ) : loading ? (
-        <p className="text-sm text-slate-500">Loading turfs…</p>
+        <p className="text-sm text-slate-300">Loading turfs…</p>
       ) : turfs.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-slate-200 p-6 text-sm text-slate-600">
+        <p className="rounded-xl border border-dashed border-white/20 p-6 text-sm text-slate-300">
           No turfs for this query. Try another city or widen the radius.
         </p>
       ) : (

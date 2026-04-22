@@ -47,26 +47,26 @@ export function Signup() {
   });
 
   return (
-    <div className="mx-auto max-w-md space-y-8 rounded-3xl border border-emerald-100 bg-white p-8 shadow-sm">
+    <div className="mx-auto max-w-md space-y-8 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-xl shadow-black/20 backdrop-blur">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Create your account</h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <h1 className="text-2xl font-bold text-white">Create your account</h1>
+        <p className="mt-2 text-sm text-slate-300">
           Already registered?{" "}
-          <Link to="/login" className="font-semibold text-emerald-700 hover:underline">
+          <Link to="/login" className="font-semibold text-rose-300 hover:underline">
             Log in
           </Link>
         </p>
       </div>
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <div>
-          <label className="text-sm font-medium text-slate-700" htmlFor="su-email">
+          <label className="text-sm font-medium text-slate-200" htmlFor="su-email">
             Email
           </label>
           <input
             id="su-email"
             type="email"
             autoComplete="email"
-            className="mt-1 w-full rounded-xl border border-emerald-100 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
+            className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/70 px-3 py-2 text-white placeholder:text-slate-400 outline-none ring-rose-400 focus:ring-2"
             {...register("email")}
           />
           {errors.email && (
@@ -74,14 +74,14 @@ export function Signup() {
           )}
         </div>
         <div>
-          <label className="text-sm font-medium text-slate-700" htmlFor="su-password">
+          <label className="text-sm font-medium text-slate-200" htmlFor="su-password">
             Password
           </label>
           <input
             id="su-password"
             type="password"
             autoComplete="new-password"
-            className="mt-1 w-full rounded-xl border border-emerald-100 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
+            className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/70 px-3 py-2 text-white placeholder:text-slate-400 outline-none ring-rose-400 focus:ring-2"
             {...register("password")}
           />
           {errors.password && (
@@ -89,12 +89,12 @@ export function Signup() {
           )}
         </div>
         <div>
-          <label className="text-sm font-medium text-slate-700" htmlFor="su-role">
+          <label className="text-sm font-medium text-slate-200" htmlFor="su-role">
             Role
           </label>
           <select
             id="su-role"
-            className="mt-1 w-full rounded-xl border border-emerald-100 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
+            className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/70 px-3 py-2 text-white outline-none ring-rose-400 focus:ring-2"
             {...register("role")}
             defaultValue="user"
           >
@@ -108,7 +108,7 @@ export function Signup() {
         <button
           type="submit"
           disabled={submitting}
-          className="flex w-full items-center justify-center rounded-xl bg-emerald-600 py-3 font-semibold text-white shadow hover:bg-emerald-700 disabled:opacity-60"
+          className="flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-rose-500 to-fuchsia-500 py-3 font-semibold text-white shadow-lg shadow-rose-900/30 hover:brightness-110 disabled:opacity-60"
         >
           {submitting ? "Creating…" : "Sign up"}
         </button>

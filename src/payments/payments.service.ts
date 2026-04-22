@@ -5,7 +5,7 @@ import { db } from "../config/db";
 import crypto from "crypto";
 import { redis } from "../config/redis";
 import { bookingemailqueue, failedPaymentQueue, adminNotificationQueue } from "../queues/index";
-
+import {generateReceipt} from "../utils/pdfkit";
 export const paymentservices = {
 
     async createorder(turfId: number, slotId: number, userId: number) {
@@ -193,6 +193,14 @@ export const paymentservices = {
                 .executeTakeFirstOrThrow();
 
             // Record successful payment
+            const recipturl = await generateReceipt({
+                bookingId: booking.booking_id,
+                userEmail: bookingCtx.email,
+                turfName: bookingCtx.turfName,
+                slotTime: bookingCtx.slotTime,
+                amount: amountPaise / 100,
+                paymentdetails:paymentdetails.razorpay_payment_id
+            }as any);
             await trx
                 .insertInto("payments")
                 .values({
@@ -202,11 +210,13 @@ export const paymentservices = {
                     razorpay_payment_id: paymentdetails.razorpay_payment_id,
                     amount: amountPaise,
                     payment_status: "success",
+                    recipturl: recipturl
                 } as any)
                 .execute();
 
             return booking;
         });
+        
 
         // Step 4 — Clear Redis AFTER transaction succeeds
         await redis.del(`slot_${bookingCtx.slotId}`);
@@ -217,7 +227,7 @@ export const paymentservices = {
             turfName: bookingCtx.turfName,
             slotTime: bookingCtx.slotTime,
             amount: amountPaise,
-            bookingId: booking.booking_id
+            bookingId: booking.booking_id,
         });
         const admin = await db
             .selectFrom("users")
