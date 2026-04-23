@@ -2,6 +2,14 @@ import {Request,Response,NextFunction} from 'express'
 import {usersignup,LoginUser,forgotpassword, generateAndSaveOTP,sendotpemail,verifyotp,rotatetoken,resetpassword} from './auth.service'
 import jwt from 'jsonwebtoken';
 
+const isProduction = process.env.NODE_ENV === "production";
+const refreshCookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+};
+
 export const signup = async (req:Request,res:Response,next:NextFunction)=>{
     try {
         const newuser = await usersignup(req.body);
@@ -20,12 +28,7 @@ export const signup = async (req:Request,res:Response,next:NextFunction)=>{
 export const login = async (req:Request,res:Response,next:NextFunction)=>{
     try {
         const {accesstoken,refreshtoken,role} = await LoginUser(req.body);
-        res.cookie("refreshToken",refreshtoken,{
-            httpOnly:true,
-            secure:true,
-            sameSite:"strict",
-            maxAge:7*24*60*60*1000//1 week
-        })
+        res.cookie("refreshToken", refreshtoken, refreshCookieOptions)
         res.status(200).json({
             message:"Login successful",
             data:{accesstoken,role}
@@ -72,19 +75,14 @@ export const resetpasswords = async(req:Request,res:Response,next:NextFunction)=
     }
 };
 export const rotatoken = async(req:Request,res:Response,next:NextFunction)=>{
-    const incomingrefreshToken = req.cookies.refreshToken ;
+    const incomingrefreshToken = req.cookies?.refreshToken;
     if(!incomingrefreshToken){
         return res.status(401).json({message:"Refresh token not found"});
     }
     try {
         const decoded = jwt.verify(incomingrefreshToken,process.env.REFRESH_TOKEN_SECRET as string) as {userid:number,role:string};
         const {accesstoken, newrefreshtoken} = await rotatetoken(decoded.userid,incomingrefreshToken,decoded.role);
-        res.cookie("refreshToken", newrefreshtoken, {
-            httpOnly:true,
-            secure:true,
-            sameSite:"strict",
-            maxAge:7*24*60*60*1000//1 week
-        })
+        res.cookie("refreshToken", newrefreshtoken, refreshCookieOptions)
         res.status(200).json({
             message:"Token rotated successfully",
             data:{accesstoken,role:decoded.role}

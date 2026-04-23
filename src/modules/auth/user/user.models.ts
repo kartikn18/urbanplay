@@ -17,6 +17,7 @@ export const userModel = {
             .selectAll()
             .where("turf_id", "=", turfId)
             .where("is_booked", "=", false) // only available slots
+            .where("start_time", ">", new Date()) // hide past date/time slots
             .execute();
     },
 

@@ -1,5 +1,6 @@
 import { userModel } from "./user.models";
 import { getCoordinates } from "../../../utils/geocode";
+import { redis } from "../../../config/redis";
 
 export const UserService = {
 
@@ -28,7 +29,13 @@ export const UserService = {
         const turf = await userModel.findTurfById(turfId);
         if (!turf) throw new Error("Turf not found");
 
-        return await userModel.findSlotsByTurfId(turfId);
+        const slots = await userModel.findSlotsByTurfId(turfId);
+        if (slots.length === 0) return [];
+
+        const slotSoftLockKeys = slots.map((slot) => `slot_${slot.id}`);
+        const softLockStates = await redis.mget(...slotSoftLockKeys);
+
+        return slots.filter((_, index) => !softLockStates[index]);
     },
     async paymenthistory(userId: number) {
         return await userModel.getBookingHistory(userId);

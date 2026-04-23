@@ -7,6 +7,7 @@ import paymentroutes from "./payments/payments.routes";
 import cors from 'cors';
 import express from 'express';
 import dotenv from 'dotenv';
+import cookieParser from "cookie-parser";
 dotenv.config();
 const app = express();
 //workers
@@ -18,6 +19,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
 //auth routes:
 import "./workers";
 app.use('/api/auth', authenticatroutes);
