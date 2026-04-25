@@ -36,6 +36,14 @@ export type TurfInfo = {
     created_at: Date;
 }
 
+export type TurfImage = {
+    id: number;
+    turf_id: number;
+    url: string;
+    sort_order: number;
+    created_at: Date;
+}
+
 export type Slot = {
     id: number;
     turf_id: number;
@@ -71,6 +79,7 @@ export interface Database {
     otps: Otp;
     refresh_tokens: RefreshToken;  // ← matches table name
     turfinfo: TurfInfo;
+    turf_images: TurfImage;
     slots: Slot;
     bookings: Booking;
     payments: Payment;

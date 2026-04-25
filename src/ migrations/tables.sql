@@ -36,6 +36,15 @@ CREATE TABLE IF NOT EXISTS turfinfo (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Stores up to 5 images per turf (cover remains turfinfo.image_url)
+CREATE TABLE IF NOT EXISTS turf_images (
+    id SERIAL PRIMARY KEY,
+    turf_id INTEGER NOT NULL REFERENCES turfinfo(id) ON DELETE CASCADE,
+    url TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS slots (
     id SERIAL PRIMARY KEY,
     turf_id INTEGER NOT NULL REFERENCES turfinfo(id) ON DELETE CASCADE,

@@ -193,14 +193,14 @@ export const paymentservices = {
                 .executeTakeFirstOrThrow();
 
             // Record successful payment
-            const recipturl = await generateReceipt({
+            const receiptUrl = await generateReceipt({
                 bookingId: booking.booking_id,
                 userEmail: bookingCtx.email,
                 turfName: bookingCtx.turfName,
                 slotTime: bookingCtx.slotTime,
-                amount: amountPaise / 100,
-                paymentdetails:paymentdetails.razorpay_payment_id
-            }as any);
+                amountPaise,
+                paymentId: paymentdetails.razorpay_payment_id,
+            });
             await trx
                 .insertInto("payments")
                 .values({
@@ -210,7 +210,7 @@ export const paymentservices = {
                     razorpay_payment_id: paymentdetails.razorpay_payment_id,
                     amount: amountPaise,
                     payment_status: "success",
-                    recipturl: recipturl
+                    recipts_url: receiptUrl,
                 } as any)
                 .execute();
 

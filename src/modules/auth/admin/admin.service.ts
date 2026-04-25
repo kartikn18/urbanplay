@@ -4,7 +4,13 @@ import { adminModel } from "./admin.models";
 export async function createTurf(input: CreateTurfInput, adminId: number) {
     try {
         const { lat, lng, formattedAddress } = await getCoordinates(input.city);
-        return await adminModel.insertTurf(input, adminId, lat, lng, formattedAddress);
+        const turf = await adminModel.insertTurf(input, adminId, lat, lng, formattedAddress);
+        if (input.image_urls?.length) {
+            await adminModel.insertTurfImages(turf.id, input.image_urls);
+        } else if (input.image_url) {
+            await adminModel.insertTurfImages(turf.id, [input.image_url]);
+        }
+        return turf;
     } catch (error) {
         throw new Error("Failed to create turf");
     }

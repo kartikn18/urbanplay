@@ -20,6 +20,20 @@ export const adminModel = {
 
       return turf;
     },
+
+  async insertTurfImages(turfId: number, urls: string[]) {
+    if (!urls.length) return;
+    await db
+      .insertInto("turf_images")
+      .values(
+        urls.slice(0, 5).map((url, idx) => ({
+          turf_id: turfId,
+          url,
+          sort_order: idx,
+        })) as any,
+      )
+      .execute();
+  },
 async createSlot(turfId:number,startTime:Date,endTime:Date,isBooked:boolean,createdAt?:Date){
     const slot = await db.
     insertInto("slots").

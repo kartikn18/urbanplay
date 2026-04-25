@@ -7,6 +7,12 @@ export const userModel = {
         return await db
             .selectFrom("turfinfo")
             .selectAll()
+            .select((eb) => [
+                sql<string[]>`COALESCE(
+                  (SELECT ARRAY_AGG(ti.url ORDER BY ti.sort_order) FROM turf_images ti WHERE ti.turf_id = ${eb.ref("turfinfo.id")}),
+                  ARRAY[]::text[]
+                )`.as("image_urls"),
+            ])
             .where("id", "=", turfId)
             .executeTakeFirst();
     },
@@ -42,16 +48,32 @@ export const userModel = {
     },
 
     async searchTurfs(filters: { lat: number; lng: number; name?: string; radius?: number }) {
-        let query = db.selectFrom("turfinfo").selectAll();
+        let query = db
+            .selectFrom("turfinfo")
+            .selectAll()
+            .select((eb) => [
+                sql<string[]>`COALESCE(
+                  (SELECT ARRAY_AGG(ti.url ORDER BY ti.sort_order) FROM turf_images ti WHERE ti.turf_id = ${eb.ref("turfinfo.id")}),
+                  ARRAY[]::text[]
+                )`.as("image_urls"),
+            ]);
 
         if (filters.name) {
             query = query.where("name", "ilike", `%${filters.name}%`);
         }
 
         query = query.where(
-            sql`(6371 * acos(cos(radians(${filters.lat})) * cos(radians(lat)) *
-            cos(radians(lng) - radians(${filters.lng})) +
-            sin(radians(${filters.lat})) * sin(radians(lat))))`,
+            sql`(6371 * acos(
+              LEAST(
+                1,
+                GREATEST(
+                  -1,
+                  (cos(radians(${filters.lat})) * cos(radians(lat)) *
+                    cos(radians(lng) - radians(${filters.lng})) +
+                    sin(radians(${filters.lat})) * sin(radians(lat)))
+                )
+              )
+            ))`,
             "<=",
             filters.radius || 10
         );

@@ -21,12 +21,17 @@ export const createTurfHandler = async (req: Request, res: Response) => {
         if (uploadedFiles.some((file) => !allowedTypes.includes(file.mimetype))) {
             return res.status(400).json({ message: "Only JPEG, PNG, or WEBP images are allowed" });
         }
-        // Current DB model stores a single image_url, so keep first image as cover.
-        const result = await uploadimage(uploadedFiles[0].buffer, "turfimages");
-        const turfimages = result.secure_url;
+        const uploadResults = await Promise.all(
+            uploadedFiles.slice(0, 5).map((f) => uploadimage(f.buffer, "turfimages")),
+        );
+        const turfimages = uploadResults.map((r) => r.secure_url).filter(Boolean);
+        if (turfimages.length === 0) {
+            return res.status(400).json({ message: "Image upload failed" });
+        }
         const input:CreateTurfInput={
             ...req.body,
-            image_url:turfimages
+            image_url:turfimages[0],
+            image_urls: turfimages,
         }
         const turf = await createTurf(input, adminId);
         res.status(201).json({

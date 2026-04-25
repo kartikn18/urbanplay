@@ -4,7 +4,7 @@ export const generateReceipt = async (data: {
     bookingId: number;
     turfName: string;
     slotTime: Date;
-    amount: number;
+    amountPaise: number;
     paymentId: string;
     userEmail: string;
 }): Promise<string> => {
@@ -37,7 +37,7 @@ export const generateReceipt = async (data: {
             }
         });
 
-        // ── PDF Content ──
+       
         doc.fontSize(22).font('Helvetica-Bold')
            .text('TURF BOOKING RECEIPT', { align: 'center' });
 
@@ -73,7 +73,7 @@ export const generateReceipt = async (data: {
         doc.moveDown();
 
         doc.fontSize(16).font('Helvetica-Bold')
-           .text(`Amount Paid: ₹${data.amount / 100}`, { align: 'right' });
+           .text(`Amount Paid: ₹${(data.amountPaise / 100).toFixed(2)}`, { align: 'right' });
 
         doc.moveDown(2);
         doc.fontSize(10).font('Helvetica')
