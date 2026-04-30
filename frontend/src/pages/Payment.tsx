@@ -25,6 +25,7 @@ export function Payment() {
 
   const [order, setOrder] = useState<RazorpayOrderPayload | null>(null);
   const [busy, setBusy] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [holdSeconds] = useState(600);
 
   const turf = state?.turf;
@@ -61,6 +62,7 @@ export function Payment() {
         theme: { color: "#059669" },
         handler: async (response) => {
           setBusy(true);
+          setVerifying(true);
           try {
             const verifyRes = await api.post<{
               booking: Booking & { recipts_url?: string | null };
@@ -90,6 +92,7 @@ export function Payment() {
           } catch (e) {
             toast.error(getApiErrorMessage(e));
           } finally {
+            setVerifying(false);
             setBusy(false);
           }
         },
@@ -174,7 +177,7 @@ export function Payment() {
           onClick={startCheckout}
           className="rounded-xl bg-emerald-600 px-8 py-3 font-semibold text-white shadow hover:bg-emerald-700 disabled:opacity-60"
         >
-          {busy ? "Processing…" : order ? "Pay again" : "Pay now"}
+          {verifying ? "Verifying payment…" : busy ? "Processing…" : order ? "Pay again" : "Pay now"}
         </button>
       </div>
     </div>

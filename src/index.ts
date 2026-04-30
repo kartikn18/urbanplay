@@ -26,7 +26,7 @@ app.use('/api/auth', authenticatroutes);
 //admin routes:
 app.use('/api/admin',authenticateToken, AdminRoutes);
 //user routes:
-app.use('/api/user',authenticateToken, Userroutes);
+app.use('/api/user', Userroutes);
 //payment routes:
 app.use('/api', paymentroutes);
 const server = http.createServer(app);

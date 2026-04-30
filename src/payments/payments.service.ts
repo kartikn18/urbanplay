@@ -218,30 +218,43 @@ export const paymentservices = {
         });
         
 
-        // Step 4 — Clear Redis AFTER transaction succeeds
-        await redis.del(`slot_${bookingCtx.slotId}`);
+        // Step 4/5 — Post-transaction side effects (must not flip a successful payment to "failed")
+        // If any of these fail (Redis/queues), the booking is still confirmed.
+        try {
+            await redis.del(`slot_${bookingCtx.slotId}`);
+        } catch (e) {
+            console.error("Post-payment cleanup failed (redis.del):", e);
+        }
 
-        // Step 5 — Queue confirmation email
-        await bookingemailqueue.add('bookingConfirmation', {
-            email: bookingCtx.email,
-            turfName: bookingCtx.turfName,
-            slotTime: bookingCtx.slotTime,
-            amount: amountPaise,
-            bookingId: booking.booking_id,
-        });
-        const admin = await db
-            .selectFrom("users")
-            .innerJoin("turfinfo", "turfinfo.created_by", "users.id")
-            .select(["users.email"])
-            .where("turfinfo.id", "=", bookingCtx.turfId)
-            .executeTakeFirst();
-        await adminNotificationQueue.add("newBooking", {
-            turfname: bookingCtx.turfName,
-            slotTime: bookingCtx.slotTime,
-            amount: amountPaise,
-            bookingId: booking.booking_id,
-            email: admin?.email
-        })
+        try {
+            await bookingemailqueue.add('bookingConfirmation', {
+                email: bookingCtx.email,
+                turfName: bookingCtx.turfName,
+                slotTime: bookingCtx.slotTime,
+                amount: amountPaise,
+                bookingId: booking.booking_id,
+            });
+        } catch (e) {
+            console.error("Post-payment side effect failed (booking email queue):", e);
+        }
+
+        try {
+            const admin = await db
+                .selectFrom("users")
+                .innerJoin("turfinfo", "turfinfo.created_by", "users.id")
+                .select(["users.email"])
+                .where("turfinfo.id", "=", bookingCtx.turfId)
+                .executeTakeFirst();
+            await adminNotificationQueue.add("newBooking", {
+                turfname: bookingCtx.turfName,
+                slotTime: bookingCtx.slotTime,
+                amount: amountPaise,
+                bookingId: booking.booking_id,
+                email: admin?.email
+            });
+        } catch (e) {
+            console.error("Post-payment side effect failed (admin notification queue):", e);
+        }
         return booking;
     },
 };
