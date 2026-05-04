@@ -20,7 +20,7 @@ export const generateReceipt = async (data: {
 
                 // Upload PDF to Cloudinary
                 const result = await new Promise<any>((res, rej) => {
-                    cloudinary.uploader.upload_stream(
+                    const stream = cloudinary.uploader.upload_stream(
                         {
                             folder: 'receipts',
                             resource_type: 'raw',
@@ -29,6 +29,7 @@ export const generateReceipt = async (data: {
                         },
                         (err, result) => err ? rej(err) : res(result)
                     );
+                    stream.end(pdfBuffer);
                 });
 
                 resolve(result.secure_url);

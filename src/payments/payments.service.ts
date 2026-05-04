@@ -33,7 +33,23 @@ export const paymentservices = {
             currency: "INR",
             receipt: `receipt_${userId}_${Date.now()}`,
         });
-
+        // Store expected order context in Redis to verify without Razorpay fetch (avoids timeout).
+        // TTL slightly longer than the slot hold.
+        try {
+            await redis.setex(
+                `order_${createorder.id}`,
+                900,
+                JSON.stringify({
+                    turfId,
+                    slotId,
+                    userId,
+                    amount: Number(createorder.amount),
+                    currency: createorder.currency,
+                }),
+            );
+        } catch (e) {
+            console.error("Could not persist order context to Redis:", e);
+        }
         return {
             orderId: createorder.id,
             amount: createorder.amount,
@@ -46,6 +62,23 @@ export const paymentservices = {
         paymentdetails: VerifyPaymentDetails,
         bookingCtx: BookingDetails
     ) {
+        // Idempotency: if we already recorded this payment_id for this user, return the booking.
+        const existing = await db
+            .selectFrom("payments")
+            .innerJoin("bookings", "bookings.booking_id", "payments.booking_id")
+            .select([
+                "bookings.booking_id",
+                "bookings.user_id",
+                "bookings.slot_id",
+                "bookings.turf_id",
+                "bookings.status",
+                "bookings.created_at",
+            ])
+            .where("payments.razorpay_payment_id", "=", paymentdetails.razorpay_payment_id)
+            .where("payments.user_id", "=", bookingCtx.userId)
+            .executeTakeFirst();
+        if (existing) return existing as any;
+
         // Step 1 — Check Redis reservation
         const verify = await redis.get(`slot_${bookingCtx.slotId}`);
         if (!verify || verify !== bookingCtx.userId.toString()) {
@@ -79,63 +112,71 @@ export const paymentservices = {
             throw new Error("Payment verification failed");
         }
 
-        // Step 2b — Confirm payment with Razorpay (amount + order binding)
-        let amountPaise: number;
+        // Step 2b — Validate expected amount/order context from Redis (no Razorpay fetch).
+        let amountPaise: number | null = null;
         try {
-            const rpPayment = await razopayconfig.payments.fetch(
-                paymentdetails.razorpay_payment_id
-            );
-            if (rpPayment.order_id !== paymentdetails.razorpay_order_id) {
-                await failedPaymentQueue.add("failedPayment", {
-                    email: bookingCtx.email,
-                    turfName: bookingCtx.turfName,
-                    amount: paymentdetails.amount,
-                    reason: "Payment does not match order",
-                    razorpay_order_id: paymentdetails.razorpay_order_id,
-                    userId: bookingCtx.userId,
-                });
-                throw new Error("Payment does not match order");
+            const raw = await redis.get(`order_${paymentdetails.razorpay_order_id}`);
+            if (raw) {
+                const parsed = JSON.parse(raw) as {
+                    turfId: number;
+                    slotId: number;
+                    userId: number;
+                    amount: number;
+                    currency?: string;
+                };
+
+                if (
+                    parsed.userId !== bookingCtx.userId ||
+                    parsed.slotId !== bookingCtx.slotId ||
+                    parsed.turfId !== bookingCtx.turfId
+                ) {
+                    await failedPaymentQueue.add("failedPayment", {
+                        email: bookingCtx.email,
+                        turfName: bookingCtx.turfName,
+                        amount: paymentdetails.amount,
+                        reason: "Order context mismatch in Redis",
+                        razorpay_order_id: paymentdetails.razorpay_order_id,
+                        userId: bookingCtx.userId,
+                    });
+                    throw new Error("Order context mismatch");
+                }
+
+                if (parsed.currency && parsed.currency !== "INR") {
+                    await failedPaymentQueue.add("failedPayment", {
+                        email: bookingCtx.email,
+                        turfName: bookingCtx.turfName,
+                        amount: paymentdetails.amount,
+                        reason: "Currency mismatch in Redis order data",
+                        razorpay_order_id: paymentdetails.razorpay_order_id,
+                        userId: bookingCtx.userId,
+                    });
+                    throw new Error("Currency mismatch");
+                }
+
+                amountPaise = Number(parsed.amount);
             }
-            const st = rpPayment.status;
-            if (st !== "captured" && st !== "authorized") {
-                await failedPaymentQueue.add("failedPayment", {
-                    email: bookingCtx.email,
-                    turfName: bookingCtx.turfName,
-                    amount: paymentdetails.amount,
-                    reason: `Payment status: ${st}`,
-                    razorpay_order_id: paymentdetails.razorpay_order_id,
-                    userId: bookingCtx.userId,
-                });
-                throw new Error("Payment not completed");
-            }
-            amountPaise = Number(rpPayment.amount);
-            if (Number(paymentdetails.amount) !== amountPaise) {
-                await failedPaymentQueue.add("failedPayment", {
-                    email: bookingCtx.email,
-                    turfName: bookingCtx.turfName,
-                    amount: paymentdetails.amount,
-                    reason: "Amount mismatch with Razorpay",
-                    razorpay_order_id: paymentdetails.razorpay_order_id,
-                    userId: bookingCtx.userId,
-                });
-                throw new Error("Amount mismatch");
-            }
-        } catch (err) {
-            const rethrow =
-                err instanceof Error &&
-                (err.message === "Payment does not match order" ||
-                    err.message === "Payment not completed" ||
-                    err.message === "Amount mismatch");
-            if (rethrow) throw err;
+        } catch (e) {
+            // If Redis is unavailable or JSON parse fails, we'll fallback to DB computation below.
+            console.error("Could not read/parse order context from Redis:", e);
+        }
+
+        if (amountPaise == null || !Number.isFinite(amountPaise) || amountPaise <= 0) {
+            // Fallback: compute from DB (less ideal if price changes, but prevents false failures)
+            const turf = await userModel.findTurfById(bookingCtx.turfId);
+            if (!turf) throw new Error("Turf not found");
+            amountPaise = Number(turf.price_per_hour) * 100;
+        }
+
+        if (Number(paymentdetails.amount) !== Number(amountPaise)) {
             await failedPaymentQueue.add("failedPayment", {
                 email: bookingCtx.email,
                 turfName: bookingCtx.turfName,
                 amount: paymentdetails.amount,
-                reason: "Razorpay payment lookup failed",
+                reason: "Amount mismatch with server expectation",
                 razorpay_order_id: paymentdetails.razorpay_order_id,
                 userId: bookingCtx.userId,
             });
-            throw new Error("Could not verify payment with Razorpay");
+            throw new Error("Amount mismatch");
         }
 
         // Step 3 — Single atomic transaction
@@ -224,6 +265,11 @@ export const paymentservices = {
             await redis.del(`slot_${bookingCtx.slotId}`);
         } catch (e) {
             console.error("Post-payment cleanup failed (redis.del):", e);
+        }
+        try {
+            await redis.del(`order_${paymentdetails.razorpay_order_id}`);
+        } catch (e) {
+            console.error("Post-payment cleanup failed (redis.del order context):", e);
         }
 
         try {
