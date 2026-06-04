@@ -1,8 +1,8 @@
 import { Queue } from "bullmq";
-import {redis} from '../config/redis';
+import {workerredis} from '../config/redis';
 
 export const otpqueue = new Queue("otpQueue",{
-    connection:redis,
+    connection:workerredis,
     defaultJobOptions:{
         attempts:3,
         backoff:{
@@ -14,7 +14,7 @@ export const otpqueue = new Queue("otpQueue",{
     }
 });
 export const bookingemailqueue = new Queue("bookingEmailQueue",{
-    connection:redis,
+    connection:workerredis,
     defaultJobOptions:{
         attempts:1,
         backoff:{
@@ -26,7 +26,7 @@ export const bookingemailqueue = new Queue("bookingEmailQueue",{
     }
 });
 export const failedPaymentQueue = new Queue("failedPaymentQueue",{
-    connection:redis,
+    connection:workerredis,
     defaultJobOptions:{
         attempts:3,
         backoff:{
@@ -38,7 +38,7 @@ export const failedPaymentQueue = new Queue("failedPaymentQueue",{
     }
 });
 export const adminNotificationQueue = new Queue("adminNotificationQueue",{
-    connection:redis,
+    connection:workerredis,
     defaultJobOptions:{
         attempts:3,
         backoff:{

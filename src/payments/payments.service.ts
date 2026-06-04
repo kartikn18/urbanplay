@@ -116,7 +116,7 @@ export const paymentservices = {
         let amountPaise: number | null = null;
         try {
             const raw = await redis.get(`order_${paymentdetails.razorpay_order_id}`);
-            if (raw) {
+            if (typeof raw === "string") {
                 const parsed = JSON.parse(raw) as {
                     turfId: number;
                     slotId: number;

@@ -1,20 +1,25 @@
 import Redis from 'ioredis';
-
-export const redis = new Redis({
+import { Redis as UpstashRedis } from '@upstash/redis';
+export const workerredis = new Redis({
     host: process.env.REDIS_HOST,
     port: Number(process.env.REDIS_PORT),
+    maxRetriesPerRequest:null
+});
+export const redis = new UpstashRedis({
+    url: process.env.REDIS_URL!,
+    token: process.env.REDIS_TOKEN!,
 });
 export const workerRedis = new Redis({
     host: process.env.REDIS_HOST,
     port: Number(process.env.REDIS_PORT),
     maxRetriesPerRequest:null
 });
-redis.on('error', (err) => {
-    console.error('Redis error:', err);
+redis.set('test', 'Redis connection successful');
+redis.get('test').then((result) => {
+    console.log(result); 
+}).catch((err) => {
+    console.error('Error connecting to Redis:', err);
 });
-redis.on('connect', () => {
-    console.log('Connected to Redis');
-}); 
 workerRedis.on('error', (err) => {
     console.error('Worker Redis error:', err);
 });
