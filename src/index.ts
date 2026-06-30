@@ -20,6 +20,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+//checking server
+app.get('/',(req,res)=>{
+    res.send('Server is running');
+})
 //auth routes:
 import "./workers";
 app.use('/api/auth', authenticatroutes);
