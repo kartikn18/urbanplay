@@ -12,7 +12,7 @@ dotenv.config();
 const app = express();
 //workers
 const corsOptions = {
-    origin: 'http://localhost:5173',
+    origin: 'https://urbanplay.vercel.app/',
     credentials:true,
     optionsSuccessStatus: 200
 };
