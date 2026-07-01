@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS turfinfo (
     lng DECIMAL(10, 7) NOT NULL,
     price_per_hour DECIMAL(10, 2) NOT NULL,
     image_url VARCHAR(256) NOT NULL,
+    password VARCHAR(256) NOT NULL,
     created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

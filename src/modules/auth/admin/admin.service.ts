@@ -1,10 +1,18 @@
+import bcrypt from "bcrypt";
 import { getCoordinates } from "../../../utils/geocode";
 import { CreateTurfInput } from "../admin/admin.types";
 import { adminModel } from "./admin.models";
 export async function createTurf(input: CreateTurfInput, adminId: number) {
     try {
         const { lat, lng, formattedAddress } = await getCoordinates(input.city);
-        const turf = await adminModel.insertTurf(input, adminId, lat, lng, formattedAddress);
+        const hashedPassword = await bcrypt.hash(input.password, 10);
+        const turf = await adminModel.insertTurf(
+            { ...input, password: hashedPassword },
+            adminId,
+            lat,
+            lng,
+            formattedAddress,
+        );
         if (input.image_urls?.length) {
             await adminModel.insertTurfImages(turf.id, input.image_urls);
         } else if (input.image_url) {
@@ -16,9 +24,19 @@ export async function createTurf(input: CreateTurfInput, adminId: number) {
     }
 }
 
-export async function createSlot(startTime: Date, endTime: Date, isBooked: boolean,name:string,id:number) {
-    const turf = await adminModel.getturfname(name,id);
-    if(!turf) throw new Error("Turf not found");
+export async function createSlot(
+    startTime: Date,
+    endTime: Date,
+    isBooked: boolean,
+    name: string,
+    adminId: number,
+    turfPassword: string,
+) {
+    const turf = await adminModel.getturfname(name, adminId);
+    if (!turf) throw new Error("Turf not found");
+    if (!turf.password) throw new Error("Turf password not set");
+    const valid = await bcrypt.compare(turfPassword, turf.password);
+    if (!valid) throw new Error("Invalid turf password");
     const turfId = turf.id;
     const overlap = await adminModel.checkSlotOverlap(turfId, startTime, endTime);
     if (overlap) throw new Error("Slot overlaps with an existing slot");

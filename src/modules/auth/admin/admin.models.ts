@@ -12,6 +12,7 @@ export const adminModel = {
         lat,
         lng,
         image_url: input.image_url,
+        password: input.password,
         price_per_hour: input.price,
         created_by: adminId,
       } as any)

@@ -28,15 +28,21 @@ export const createTurfHandler = async (req: Request, res: Response) => {
         if (turfimages.length === 0) {
             return res.status(400).json({ message: "Image upload failed" });
         }
+        const password = req.body.password;
+        if (!password || typeof password !== "string" || password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters" });
+        }
         const input:CreateTurfInput={
             ...req.body,
+            password,
             image_url:turfimages[0],
             image_urls: turfimages,
         }
         const turf = await createTurf(input, adminId);
+        const { password: _pw, ...safeTurf } = turf as typeof turf & { password?: string };
         res.status(201).json({
             message: "Turf created successfully",
-            data: turf,
+            data: safeTurf,
         });
     } catch (error) {
         console.error("Error creating turf:", error);
@@ -50,14 +56,35 @@ export const createSlotHandler = async (req: Request, res: Response) => {
             return res.status(403).json({ message: "You are not authorized to create slots" });
         }
         const adminid = req.user.id;
-        const {name,startTime,endTime} = req.body;
-        const slot = await createSlot(new Date(startTime), new Date(endTime), false, name, adminid);
+        const { name, startTime, endTime, turfPassword } = req.body;
+        if (!turfPassword || typeof turfPassword !== "string") {
+            return res.status(400).json({ message: "Turf password is required" });
+        }
+        const slot = await createSlot(
+            new Date(startTime),
+            new Date(endTime),
+            false,
+            name,
+            adminid,
+            turfPassword,
+        );
         res.status(201).json({
             message: "Slot created successfully",
             data: slot,
         });
     } catch (error) {
         console.error("Error creating slot:", error);
+        if (error instanceof Error) {
+            if (error.message === "Turf not found") {
+                return res.status(404).json({ message: error.message });
+            }
+            if (error.message === "Invalid turf password" || error.message === "Turf password not set") {
+                return res.status(403).json({ message: error.message });
+            }
+            if (error.message === "Slot overlaps with an existing slot") {
+                return res.status(409).json({ message: error.message });
+            }
+        }
         res.status(500).json({ message: "Internal server error" });
     }
 };

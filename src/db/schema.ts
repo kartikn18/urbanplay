@@ -32,6 +32,7 @@ export type TurfInfo = {
     lng: number;
     price_per_hour: number;
     image_url: string;
+    password: string;
     created_by: number;
     created_at: Date;
 }

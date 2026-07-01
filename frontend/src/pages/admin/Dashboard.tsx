@@ -11,12 +11,14 @@ const turfSchema = z.object({
   address: z.string().min(1),
   city: z.string().min(1),
   price: z.coerce.number().positive(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 type TurfForm = z.infer<typeof turfSchema>;
 
 const slotSchema = z.object({
   name: z.string().min(1, "Turf name (must match a turf you created)"),
+  turfPassword: z.string().min(1, "Turf password is required"),
   startTime: z.string().min(1),
   endTime: z.string().min(1),
 });
@@ -80,6 +82,7 @@ export function Dashboard() {
       fd.append("address", values.address);
       fd.append("city", values.city);
       fd.append("price", String(values.price));
+      fd.append("password", values.password);
       filesToUpload.forEach((img) => fd.append("image", img));
       await api.post("/admin/turf", fd);
       toast.success("Turf created");
@@ -98,6 +101,7 @@ export function Dashboard() {
     try {
       await api.post("/admin/slot", {
         name: values.name,
+        turfPassword: values.turfPassword,
         startTime: new Date(values.startTime).toISOString(),
         endTime: new Date(values.endTime).toISOString(),
       });
@@ -175,7 +179,7 @@ export function Dashboard() {
       <section className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl shadow-black/20 backdrop-blur">
         <h2 className="text-xl font-semibold text-white">Create turf</h2>
         <p className="mt-1 text-sm text-slate-300">
-          Fields align with your handler: name, description, address, city, price, and up to 5 images.
+          Fields: name, description, address, city, price, turf password, and up to 5 images.
         </p>
         <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={onCreateTurf}>
           <div>
@@ -236,6 +240,19 @@ export function Dashboard() {
             )}
           </div>
           <div>
+            <label className="text-sm font-medium text-slate-200">Turf password</label>
+            <input
+              type="password"
+              autoComplete="new-password"
+              placeholder="Min 6 characters — required to add slots later"
+              className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/70 px-3 py-2 text-white outline-none ring-rose-400 focus:ring-2"
+              {...turfForm.register("password")}
+            />
+            {turfForm.formState.errors.password && (
+              <p className="mt-1 text-xs text-red-600">{turfForm.formState.errors.password.message}</p>
+            )}
+          </div>
+          <div>
             <label className="text-sm font-medium text-slate-200">Images (max 5)</label>
             <input
               ref={imageInputRef}
@@ -277,7 +294,7 @@ export function Dashboard() {
       <section className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl shadow-black/20 backdrop-blur">
         <h2 className="text-xl font-semibold text-white">Create slot</h2>
         <p className="mt-1 text-sm text-slate-300">
-          Backend resolves turf by exact <strong>name</strong> you created under your admin account.
+          Enter the exact <strong>turf name</strong> and the <strong>password</strong> you set when creating that turf.
         </p>
         <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={onCreateSlot}>
           <div className="md:col-span-2">
@@ -288,6 +305,19 @@ export function Dashboard() {
             />
             {slotForm.formState.errors.name && (
               <p className="mt-1 text-xs text-red-600">{slotForm.formState.errors.name.message}</p>
+            )}
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-sm font-medium text-slate-200">Turf password</label>
+            <input
+              type="password"
+              autoComplete="current-password"
+              placeholder="Password for this turf"
+              className="mt-1 w-full rounded-xl border border-white/20 bg-slate-900/70 px-3 py-2 text-white outline-none ring-rose-400 focus:ring-2"
+              {...slotForm.register("turfPassword")}
+            />
+            {slotForm.formState.errors.turfPassword && (
+              <p className="mt-1 text-xs text-red-600">{slotForm.formState.errors.turfPassword.message}</p>
             )}
           </div>
           <div>

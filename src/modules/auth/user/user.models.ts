@@ -1,12 +1,25 @@
 import { db } from "../../../config/db";
 import { sql } from "kysely";
 
+const PUBLIC_TURF_COLUMNS = [
+    "id",
+    "name",
+    "location",
+    "description",
+    "lat",
+    "lng",
+    "price_per_hour",
+    "image_url",
+    "created_by",
+    "created_at",
+] as const;
+
 export const userModel = {
 
     async findTurfById(turfId: number) {
         return await db
             .selectFrom("turfinfo")
-            .selectAll()
+            .select(PUBLIC_TURF_COLUMNS)
             .select((eb) => [
                 sql<string[]>`COALESCE(
                   (SELECT ARRAY_AGG(ti.url ORDER BY ti.sort_order) FROM turf_images ti WHERE ti.turf_id = ${eb.ref("turfinfo.id")}),
@@ -51,7 +64,7 @@ export const userModel = {
     async searchTurfs(filters: { lat: number; lng: number; name?: string; radius?: number }) {
         let query = db
             .selectFrom("turfinfo")
-            .selectAll()
+            .select(PUBLIC_TURF_COLUMNS)
             .select((eb) => [
                 sql<string[]>`COALESCE(
                   (SELECT ARRAY_AGG(ti.url ORDER BY ti.sort_order) FROM turf_images ti WHERE ti.turf_id = ${eb.ref("turfinfo.id")}),

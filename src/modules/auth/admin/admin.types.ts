@@ -5,6 +5,7 @@ export const createTurfSchema = z.object({
   description: z.string().min(1),
   address: z.string().min(1),
   price: z.number().positive(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const createSlotSchema = z.object({
@@ -20,6 +21,7 @@ export interface CreateTurfInput {
   name: string;
   description: string;
   address: string;
+  password: string;
   image_url: string;
   image_urls?: string[];
   price:number;
